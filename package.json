@@ -1,0 +1,32 @@
+{
+  "name": "intake-triager",
+  "version": "0.1.0",
+  "description": "Employee Relations intake, structured end-to-end. Worked example for Implementing the Restaurant.",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "main": "src/backend/app.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "concurrently \"node --watch src/backend/app.js\" \"vite\"",
+    "test": "vitest run --passWithNoTests",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
+  }
+}
