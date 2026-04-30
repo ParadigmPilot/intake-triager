@@ -98,6 +98,19 @@ async function setConversationStatus(conversation_id, status, owner_id, tx = nul
   );
 }
 
+async function sumConversationOutputTokens(conversation_id, owner_id, tx = null) {
+  const result = await _runner(tx).query(
+    `SELECT COALESCE(SUM((token_usage->>'output_tokens')::int), 0) AS total
+       FROM messages
+      WHERE conversation_id = $1
+        AND owner_id = $2
+        AND role = 'assistant'
+        AND token_usage IS NOT NULL`,
+    [conversation_id, owner_id]
+  );
+  return parseInt(result.rows[0].total, 10);
+}
+
 async function transaction(callback) {
   const client = await pool.connect();
   try {
@@ -123,6 +136,7 @@ export default {
   loadMessages,
   insertTriageRecord,
   setConversationStatus,
+  sumConversationOutputTokens,
   transaction,
   query,
 };

@@ -31,11 +31,17 @@ Each entry below names a **Reconciliation target**: the file(s) and section(s) t
 
 ## Index
 
-| ID    | Severity | Phase   | Discovered  | Status | Title                                                              |
-| ----- | -------- | ------- | ----------- | ------ | ------------------------------------------------------------------ |
-| D1    | MINOR    | Phase 2 | Cycle 303.3 | Open   | WO-303.3a smoke-test ESM `import` uses bare Windows path           |
-| D2    | MINOR    | Phase 2 | Cycle 303.3 | Open   | WO-303.3a Success Criteria says "ten checks"; smoke test runs eleven |
-| D3    | MINOR    | Phase 3 | Cycle 303.3 | Open   | Gold vision silent on per-call `max_tokens` for Chef               |
+| ID    | Severity | Phase   | Discovered  | Status | Title                                                                          |
+| ----- | -------- | ------- | ----------- | ------ | ------------------------------------------------------------------------------ |
+| D1    | MINOR    | Phase 2 | Cycle 303.3 | Open   | WO-303.3a smoke-test ESM `import` uses bare Windows path                       |
+| D2    | MINOR    | Phase 2 | Cycle 303.3 | Open   | WO-303.3a Success Criteria says "ten checks"; smoke test runs eleven           |
+| D3    | MINOR    | Phase 3 | Cycle 303.3 | Open   | Gold vision silent on per-call `max_tokens` for Chef                           |
+| D4    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §4 Repo structure missing `security/cors.js` and `cost-ceiling.js` |
+| D5    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §11 Non-goals silent on Phase 5 unit-test files                    |
+| D6    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §10 silent on `MAX_CONTENT_LENGTH`                                 |
+| D7    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §10 item 5 silent on prompt-injection wrapper syntax               |
+| D8    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Cost ceiling lives in `cost-ceiling.js`, not `rate-limit.js`                   |
+| D9    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §4 Pantry public API table missing `sumConversationOutputTokens`   |
 
 ---
 
@@ -142,4 +148,174 @@ ALL CHECKS PASSED
 
 ---
 
-_Last updated: 2026-04-29 — Cycle 303, Session 303.3._
+### D4 — Gold vision §4 Repo structure missing `security/cors.js` and `cost-ceiling.js`
+
+| Field       | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| Severity    | MINOR                                                  |
+| Phase       | Phase 5 (Security floor)                               |
+| Discovered  | Cycle 303, Session 303.6 (Phase 5 WO drafting)         |
+| Status      | Open                                                   |
+
+**Discovery.** Gold vision §4 *Repo structure* lists three files under `src/backend/security/`: `rate-limit.js`, `input-validation.js`, `prompt-injection.js`. Phase 5 ships two additional files at the same depth: `cors.js` (per WO-303.6e) and `cost-ceiling.js` (per WO-303.6d, also covered by D8).
+
+§10 item 9 names CORS as a security-floor item and names the env var (`CORS_ALLOWED_ORIGINS`), but assigns no file path. The `cors` package is named in §4 *Required dependencies*. The file path `security/cors.js` is the natural sibling shape but is canon-silent.
+
+**Evidence.** Gold vision §4 *Repo structure* tree under `src/backend/security/` (verbatim):
+
+```
+security/
+├── rate-limit.js        # Per-IP and per-conversation
+├── input-validation.js  # Length caps, content-type, attachment caps
+└── prompt-injection.js  # User-text isolation
+```
+
+After Phase 5 merges, `src/backend/security/` contains:
+
+```
+security/
+├── rate-limit.js
+├── input-validation.js
+├── prompt-injection.js
+├── cors.js
+└── cost-ceiling.js
+```
+
+**Workaround applied.** Created `src/backend/security/cors.js` per WO-303.6e and `src/backend/security/cost-ceiling.js` per WO-303.6d. Both modules follow the existing security-module shape (factory or middleware function reading env at call time).
+
+**Reconciliation target.** Update gold vision §4 *Repo structure* tree to add `cors.js` and `cost-ceiling.js` under `src/backend/security/`. Phase 9.D in Cycle 304.
+
+---
+
+### D5 — Gold vision §11 Non-goals silent on Phase 5 unit-test files
+
+| Field       | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| Severity    | MINOR                                                  |
+| Phase       | Phase 5 (Security floor)                               |
+| Discovered  | Cycle 303, Session 303.6 (Phase 5 WO drafting)         |
+| Status      | Open                                                   |
+
+**Discovery.** Gold vision §11 *Non-goals* names exactly three unit-test files in scope:
+
+> unit tests for the Expediter, handlers, and prompt assembler (`test/expediter.test.js`, `test/handlers.test.js`, `test/prompt-assembler.test.js`)
+
+Phase 5 ships five additional unit-test files (`input-validation.test.js`, `prompt-injection.test.js`, `rate-limit.test.js`, `cost-ceiling.test.js`, `cors.test.js`). Per the Cycle 303.6 strategy ruling, security tests are GOLD-aligned — going untested into Phase 8 E2E for input-validation regex bounds and rate-limiter clock math is reckless — but canon doesn't list them.
+
+**Evidence.** Gold vision §11 *Non-goals* "In scope" paragraph (verbatim):
+
+> In scope: an initial migration (`src/db/migrations/001-initial.sql` matching `schema.sql`) and unit tests for the Expediter, handlers, and prompt assembler (`test/expediter.test.js`, `test/handlers.test.js`, `test/prompt-assembler.test.js`). Anything beyond is in the table above.
+
+After Phase 5 merges, `test/` contains eight files; canon names three.
+
+**Workaround applied.** None — tests shipped per WOs 6a–6e. Each test file is colocated with its named-file canon rules and ships green.
+
+**Reconciliation target.** Update gold vision §11 *Non-goals* "In scope" paragraph to add the five Phase 5 test files. Phase 9.D in Cycle 304.
+
+---
+
+### D6 — Gold vision §10 silent on `MAX_CONTENT_LENGTH`
+
+| Field       | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| Severity    | MINOR                                                  |
+| Phase       | Phase 5 (Security floor)                               |
+| Discovered  | Cycle 303, Session 303.6 (WO-303.6a drafting)          |
+| Status      | Open                                                   |
+
+**Discovery.** Gold vision §10 item 3 prescribes "input validation at the door — message length caps" but does not specify a value. §10 *Configuration* enumerates nine env keys; none govern content length. The middleware needs a defensible numeric cap to enforce.
+
+**Evidence.** Gold vision §10 item 3 (verbatim):
+
+> 3. **Input validation at the door** — message length caps, `Content-Type` checks (the door rejects `multipart/form-data` by default; the conversation surface is text only). File: `src/backend/security/input-validation.js`.
+
+§10 *Configuration* table — nine keys, none for content length. The phrase "message length caps" appears in item 3 but the value is canon-silent.
+
+**Workaround applied.** WO-303.6a fixed `MAX_CONTENT_LENGTH = 8000` (chars) as a module-load constant in `input-validation.js`. Rationale: defensible default for one user message turn — well above conversational lengths but below denial-of-service input sizes. Same pattern as D3 (`MAX_TOKENS = 4096` in `chef.js`).
+
+**Reconciliation target.** Add `MAX_CONTENT_LENGTH` (or equivalent) to gold vision §10. Owner ruling needed during Phase 9.D: hard-coded constant in `input-validation.js`, or new env key added to §10 *Configuration*. If env-driven, also add to `.env.example`.
+
+---
+
+### D7 — Gold vision §10 item 5 silent on prompt-injection wrapper syntax
+
+| Field       | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| Severity    | MINOR                                                  |
+| Phase       | Phase 5 (Security floor)                               |
+| Discovered  | Cycle 303, Session 303.6 (WO-303.6b drafting)          |
+| Status      | Open                                                   |
+
+**Discovery.** Gold vision §10 item 5 prescribes "prompt-injection hygiene — user text isolated from system instructions" but does not specify the wrapper syntax (delimiters, neutralization rules, transport-vs-storage split) used to isolate user content within the message array sent to the Chef.
+
+**Evidence.** Gold vision §10 item 5 (verbatim):
+
+> 5. **Prompt-injection hygiene** — user text isolated from system instructions; Taylor never acts on the Patron's behalf without explicit confirmation handlers. File: `src/backend/security/prompt-injection.js`.
+
+The phrase "user text isolated from system instructions" is the only constraint on the wrap mechanism; nothing about delimiter choice, escape rules, or where in the request flow the wrap is applied.
+
+**Workaround applied.** WO-303.6b fixed `<user_message>...</user_message>` as the wrapper syntax with literal close-tag neutralization (replacing any `</user_message>` substring in user content with `&lt;/user_message&gt;` to prevent envelope escape). Wrap is applied at transport time between `pantry.loadMessages` and `Briefing.assemblePrompt`; storage stays raw. Rationale: well-known tag form; signals "data, not instructions" to Claude; defensive neutralization closes the obvious injection vector.
+
+**Reconciliation target.** Add wrapper syntax specification to gold vision §10 item 5 (open/close tags, the neutralization rule, and the storage-vs-transport split). Phase 9.D in Cycle 304.
+
+---
+
+### D8 — Cost ceiling lives in `cost-ceiling.js`, not `rate-limit.js`
+
+| Field       | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| Severity    | MINOR                                                  |
+| Phase       | Phase 5 (Security floor)                               |
+| Discovered  | Cycle 303, Session 303.6 (WO-303.6c/6d drafting)       |
+| Status      | Open                                                   |
+
+**Discovery.** Gold vision §10 item 7 prescribes "Rate limit on `/converse` — per-IP **and per-conversation**. File: `src/backend/security/rate-limit.js`." Build plan §Phase 5 deliverables list both per-IP rate limit and per-conversation cost ceiling under `rate-limit.js`. The Cycle 303.6 strategy ruling decomposed Phase 5 into five WOs (RULE-06), splitting per-conversation cost ceiling into a separate file `cost-ceiling.js`.
+
+The two enforcement axes have different storage (in-memory `Map` vs Pantry-summed `output_tokens`), different error codes (`RATE_LIMITED` vs `TOKEN_CEILING_EXCEEDED`), different call sites (Express middleware vs in-handler check), and different lifecycles (transient vs persistent). The split improves RULE-06 fidelity and reading clarity, but diverges from canon's named file path.
+
+**Evidence.** Gold vision §10 item 7 (verbatim):
+
+> 7. **Rate limit on `/converse`** — per-IP and per-conversation. File: `src/backend/security/rate-limit.js`. Per-IP threshold from `RATE_LIMIT_PER_IP_PER_MINUTE` env var (default 20).
+
+§10 item 8 (verbatim):
+
+> 8. **Cost ceiling per conversation** — token accounting metered at the Expediter; caps enforced before the Chef is called. Threshold from `CONVERSATION_TOKEN_CEILING` env var (default 200000). Sum of `output_tokens` across all assistant messages in the conversation.
+
+Item 8 names neither a file path nor a separate module — the canonical reading is that cost ceiling lives in `rate-limit.js` per item 7.
+
+**Workaround applied.** Per-IP rate limit lives in `src/backend/security/rate-limit.js` (WO-303.6c). Per-conversation cost ceiling lives in `src/backend/security/cost-ceiling.js` (WO-303.6d). Both `app.js` (Phase 6) and `/converse.js` (Phase 6) will import from their respective modules.
+
+**Reconciliation target.** Owner ruling needed during Phase 9.D: either (a) update gold vision §10 to name `cost-ceiling.js` as the file path for item 8 and clarify that item 7 covers only per-IP, or (b) consolidate `rate-limit.js` and `cost-ceiling.js` into one module per the original canon. (a) is the simpler change and matches the shipped code. Phase 9.D in Cycle 304.
+
+---
+
+### D9 — Gold vision §4 Pantry public API table missing `sumConversationOutputTokens`
+
+| Field       | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| Severity    | MINOR                                                  |
+| Phase       | Phase 5 (Security floor)                               |
+| Discovered  | Cycle 303, Session 303.6 (WO-303.6d drafting)          |
+| Status      | Open                                                   |
+
+**Discovery.** Gold vision §4 *Pantry public API* declares "the Pantry exposes a small surface; everything else in `pantry.js` is internal." The accompanying table lists seven methods. Phase 5 added an eighth: `sumConversationOutputTokens(conversation_id, owner_id, tx)` for the cost-ceiling check. The new method was required because canon §4 also specifies that `pantry.query()` is "Migration code only; never called at request time" — `cost-ceiling.js` cannot reach around the public API to write its own SQL.
+
+The shape and conventions of the new method match the existing seven (final optional `tx`, `owner_id` discipline, route through `_runner(tx)`); only the table is incomplete.
+
+**Evidence.** Gold vision §4 *Pantry public API* (verbatim):
+
+> The Pantry exposes a small surface; everything else in `pantry.js` is internal.
+
+Followed by a seven-row table. After Phase 5 merges, `pantry.js` exports an eighth method.
+
+**Workaround applied.** Added `sumConversationOutputTokens` per WO-303.6d. Method signature, SQL parameterization, transaction routing, and `owner_id` discipline match the existing seven methods. SQL uses `COALESCE(SUM((token_usage->>'output_tokens')::int), 0)` with a `role = 'assistant' AND token_usage IS NOT NULL` filter; returns `0` for empty conversations.
+
+**Reconciliation target.** Add a row to gold vision §4 *Pantry public API* table:
+
+> `sumConversationOutputTokens(conversation_id, owner_id, tx) → number` — Return the sum of `output_tokens` across all `role='assistant'` rows for the conversation, scoped to `owner_id`. Returns `0` for empty conversations. Used by `security/cost-ceiling.js` to enforce `CONVERSATION_TOKEN_CEILING` before the Chef is called.
+
+Phase 9.D in Cycle 304.
+
+---
+
+_Last updated: 2026-04-30 — Cycle 303, Session 303.6._
