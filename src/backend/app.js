@@ -19,6 +19,8 @@
 // the only external HTTP contract this repo defines" — the Phase 0
 // /health stub did not survive Phase 6 (build-discovery D10).
 
+// .env loaded into process.env before any module that reads it (build-discovery D12).
+import 'dotenv/config';
 import express from 'express';
 
 import { corsMiddleware } from './security/cors.js';

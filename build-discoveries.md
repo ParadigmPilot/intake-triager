@@ -44,6 +44,7 @@ Each entry below names a **Reconciliation target**: the file(s) and section(s) t
 | D9    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §4 Pantry public API table missing `sumConversationOutputTokens`   |
 | D10   | MINOR    | Phase 6 | Cycle 303.7 | Reconciled | Phase 0 `/health` stub removed by Phase 6 (canon-deviation self-healed)   |
 | D11   | MINOR    | Phase 6 | Cycle 303.7 | Open   | Gold vision §11 Non-goals silent on `converse.test.js`                         |
+| D12   | MINOR    | Phase 6 | Cycle 303.7 | Reconciled | `dotenv` declared in `package.json` but never imported                     |
 
 ---
 
@@ -372,4 +373,35 @@ The "Anything beyond" clause references `Out of scope` items — primarily integ
 
 ---
 
-_Last updated: 2026-04-30 — Cycle 303, Session 303.7._
+### D12 — `dotenv` declared in `package.json` but never imported
+
+| Field       | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| Severity    | MINOR                                                  |
+| Phase       | Phase 6 (The Pass) / Phase 7 prep                      |
+| Discovered  | Cycle 303, Session 303.7 (live Phase 6 Gate post-merge) |
+| Status      | Reconciled                                             |
+
+**Discovery.** Gold vision v1.5 §4 *Backend runtime* lists `dotenv` in the runtime dependency stack (alongside `express`, `pg`, `cors`, `@anthropic-ai/sdk`). Phase 0 `package.json` correctly declared the dependency. However, no source file in the repo imported `dotenv` or called `dotenv.config()` between Sessions 303.1 and 303.7. `.env` was therefore a no-op at runtime through Phase 6 — every `process.env.X` read resolved only against the calling shell.
+
+**Concrete exposure.** `src/backend/converse.js` reads `process.env.ORG_NAME` and `process.env.CRISIS_LINE` at every turn for placeholder substitution into `system.md`. Without dotenv loading, these would resolve to `undefined`, embedding the literal string `undefined` into the system prompt. The Phase 6 live Gate passed only because the calling PowerShell session had the values exported.
+
+**Evidence.** Gold vision §4 *Backend runtime* (verbatim):
+
+> | Backend runtime | `express`, `pg`, `cors`, `dotenv`, `@anthropic-ai/sdk` |
+
+`package.json` Phase 0 (commit `e1befbe`):
+
+```json
+"dotenv": "^16.4.7",
+```
+
+No source file imported `dotenv` between Cycle 303 Sessions 303.1 and 303.7. Phase 7 surfaced the question because the frontend → backend hop depends on `CORS_ALLOWED_ORIGINS` and `PORT` being populated for any newly-cloned environment.
+
+**Workaround applied.** Added `import 'dotenv/config';` as the first import in `src/backend/app.js` (WO-303.8a, this cycle). The side-effect import calls `dotenv.config()` at module load, populating `process.env` from `.env` before any other module that reads it. Production deployments that supply env via a secret manager are unaffected — `dotenv` silently no-ops when `.env` is absent.
+
+**Reconciliation target.** None — divergence resolved in-cycle by WO-303.8a (this WO). Entry retained for audit history per the spec's "Reconciled" definition. The gold vision §4 *Backend runtime* line is now true: `dotenv` is in the runtime dependency stack and actually used at runtime. No gold vision amendment required. Future WOs that declare a runtime dependency should pass a strict "is it imported anywhere?" check at authoring time.
+
+---
+
+_Last updated: 2026-04-30 — Cycle 303, Session 303.8._
