@@ -1,4 +1,13 @@
-// Phase 0 placeholder — full React entry (renders App.jsx) lands at Phase 7
-// (Frontend). Per intake-triager-gold-vision.md v1.5 §4.
+// React entry. Loaded by index.html as a module script.
+// Per intake-triager-gold-vision.md v1.5 §4 Restaurant map (line 115),
+// the Dining Room root is App.jsx; this file does nothing but mount it.
 
-console.log('[frontend] main.jsx loaded');
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './components/App.jsx';
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
