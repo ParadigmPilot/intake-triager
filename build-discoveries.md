@@ -45,6 +45,7 @@ Each entry below names a **Reconciliation target**: the file(s) and section(s) t
 | D10   | MINOR    | Phase 6 | Cycle 303.7 | Reconciled | Phase 0 `/health` stub removed by Phase 6 (canon-deviation self-healed)   |
 | D11   | MINOR    | Phase 6 | Cycle 303.7 | Open   | Gold vision §11 Non-goals silent on `converse.test.js`                         |
 | D12   | MINOR    | Phase 6 | Cycle 303.7 | Reconciled | `dotenv` declared in `package.json` but never imported                     |
+| D13   | MINOR    | Phase 7 | Cycle 303.8 | Reconciled | PR #9 squash-merged when merge criterion required `Create a merge commit`  |
 
 ---
 
@@ -404,4 +405,52 @@ No source file imported `dotenv` between Cycle 303 Sessions 303.1 and 303.7. Pha
 
 ---
 
-_Last updated: 2026-04-30 — Cycle 303, Session 303.8._
+### D13 — PR #9 squash-merged when merge criterion required `Create a merge commit`
+
+| Field       | Value                                                         |
+| ----------- | ------------------------------------------------------------- |
+| Severity    | MINOR                                                         |
+| Phase       | Phase 7 (Frontend) / Cycle 303.8 merge gate                   |
+| Discovered  | Cycle 303, Session 303.8.a (post-merge topology verification) |
+| Status      | Reconciled                                                    |
+
+**Discovery.** Breakout 303.8.a merge criterion #2 explicitly required: "`build/phase-7-frontend` is merged to `intake-triager` main via the **Create a merge commit** method, preserving the five per-WO commits." PR #9 was opened, reviewed, and merged via the GitHub web UI — but the merge-method dropdown defaulted to "Squash and merge" rather than "Create a merge commit." The first merge commit `a165ca6` had only one parent, confirming the squash. The five per-WO commits (`18862d6`, `7a45d48`, `c8aecda`, `ea58343`, `a61c099`) were not visible on `main` after the squash; they survived only on the `build/phase-7-frontend` branch and the closed PR audit log. Same pattern as the Cycle 301 learning that authored this merge criterion.
+
+**Concrete exposure.** Loss of per-WO commit visibility on `main` defeats the traceability the breakout merge criterion was designed to preserve — each Phase 7 file had to carry a clean `git blame` link back to its governing WO. Without recovery, the WO→commit→file chain would have been resolvable only via the PR audit log, which is GitHub-specific and not part of the local repo's history.
+
+**Evidence.**
+
+```powershell
+# Post-squash (the deviation)
+PS> git cat-file -p a165ca6 | Select-String "^parent"
+parent 40d00e4dae86b69d7d837d95866c7f58c09fb526
+
+# Post-recovery (the corrected topology)
+PS> git cat-file -p fc30eca | Select-String "^parent"
+parent 40d00e4dae86b69d7d837d95866c7f58c09fb526
+parent a61c099c281535c449bf77361f75e5d9a803bdf5
+```
+
+The single-parent vs. two-parent diff is the squash-vs-merge fingerprint.
+
+**Workaround applied.** Recovery executed in-cycle on the local clone, then force-pushed:
+
+```powershell
+git checkout main
+git reset --hard 40d00e4
+git merge --no-ff build/phase-7-frontend -m "Phase 7 — Frontend (Cycle 303) (#9)"
+git push --force origin main
+```
+
+Result: merge commit `fc30eca` replaces `a165ca6` on `origin/main` with two parents and the five per-WO commits visible in `git log --oneline --graph`. PR #9 remains "Merged" on GitHub (the PR record is decoupled from main's topology after the click). Solo-dev repo with no concurrent contributors; force-push blast radius was zero. Merge criterion #2 is now satisfied via topology, not via the PR audit log.
+
+**Reconciliation target.** Two complementary actions, batched to Phase 9.D in Cycle 304:
+
+1. **GitHub repo settings (preventative).** In `ParadigmPilot/intake-triager` → Settings → General → Pull Requests, disable "Allow squash merging" and "Allow rebase merging"; leave only "Allow merge commits" enabled. Apply the same change to the `ParadigmPilot/hopper` repo. This makes the merge-method choice impossible to get wrong from the UI.
+2. **Pre-merge checklist (defensive).** Add an item to the breakout-close archetype `Merge Instructions` template (or to the breakout-assignment Notes section): "Before clicking Merge, verify the GitHub merge-method dropdown reads 'Create a merge commit'. Squash and Rebase irreversibly drop per-WO history and force a force-push recovery."
+
+Reconciled in-cycle by the recovery sequence above; the durable preventative fix is the Phase 9.D action.
+
+---
+
+_Last updated: 2026-04-30 — Cycle 303, Session 303.8.a (D13 appended)._
