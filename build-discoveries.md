@@ -42,6 +42,8 @@ Each entry below names a **Reconciliation target**: the file(s) and section(s) t
 | D7    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §10 item 5 silent on prompt-injection wrapper syntax               |
 | D8    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Cost ceiling lives in `cost-ceiling.js`, not `rate-limit.js`                   |
 | D9    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §4 Pantry public API table missing `sumConversationOutputTokens`   |
+| D10   | MINOR    | Phase 6 | Cycle 303.7 | Reconciled | Phase 0 `/health` stub removed by Phase 6 (canon-deviation self-healed)   |
+| D11   | MINOR    | Phase 6 | Cycle 303.7 | Open   | Gold vision §11 Non-goals silent on `converse.test.js`                         |
 
 ---
 
@@ -318,4 +320,56 @@ Phase 9.D in Cycle 304.
 
 ---
 
-_Last updated: 2026-04-30 — Cycle 303, Session 303.6._
+### D10 — Phase 0 `/health` stub removed by Phase 6 (canon-deviation self-healed)
+
+| Field       | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| Severity    | MINOR                                                  |
+| Phase       | Phase 6 (The Pass)                                     |
+| Discovered  | Cycle 303, Session 303.7 (WO-303.7a strategy review)   |
+| Status      | Reconciled                                             |
+
+**Discovery.** The Phase 0 placeholder `src/backend/app.js` (delivered by WO-303.1c) shipped with a `GET /health` smoke endpoint that has no canonical authority. Gold vision v1.5 §4 *HTTP API contract* closes with the strict-construction sentence "this is the only external HTTP contract this repo defines," referring to `POST /converse`. Strict reading makes `/health` a canon deviation. It lived on `main` from Session 303.1 through Session 303.6 (six sessions) before being noticed during WO-303.7a strategy.
+
+**Evidence.** Gold vision §4 *HTTP API contract* (verbatim, closing sentence):
+
+> This is the only external HTTP contract this repo defines.
+
+Phase 0 `app.js` source (lines 9–10, as shipped at commit `e1befbe`):
+
+```javascript
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+```
+
+WO-303.1c declared the file as a placeholder explicitly: "full Express bootstrap (mounts middleware and routes) lands at Phase 6 (The Pass)." Strict construction at the time of authoring would have caught `/health`; it did not.
+
+**Workaround applied.** None needed. Phase 6 WO-303.7a replaced the entire `app.js` content as part of the planned bootstrap rewrite; `/health` did not survive the replacement. Verified by Phase 6 manual gate: `curl -i http://localhost:3000/health` returns `404 Not Found`.
+
+**Reconciliation target.** None — divergence self-healed in Cycle 303 by Phase 6 WO-303.7a (commit `3d919db`, merged via PR #7 at `b58bdb8`). Entry retained for audit history per the spec's "Reconciled" definition. No gold vision amendment, no WO retrospective edit. Future placeholder WOs in cycles like this should pass the same strict-construction check at authoring time.
+
+---
+
+### D11 — Gold vision §11 Non-goals silent on `converse.test.js`
+
+| Field       | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| Severity    | MINOR                                                  |
+| Phase       | Phase 6 (The Pass)                                     |
+| Discovered  | Cycle 303, Session 303.7 (WO-303.7b drafting)          |
+| Status      | Open                                                   |
+
+**Discovery.** Gold vision §11 *Non-goals* "In scope" paragraph names three unit-test files explicitly: `test/expediter.test.js`, `test/handlers.test.js`, `test/prompt-assembler.test.js`. Phase 6 ships an eighth Vitest suite — `test/converse.test.js` — covering the route-layer orchestrator's first-turn, continuation, cost-ceiling, transaction-rollback, and four documented error paths. The canon list does not include it. This is the same pattern previously logged as D5 (Phase 5 test files), now extended to the route-layer test for Phase 6.
+
+**Evidence.** Gold vision §11 (verbatim):
+
+> In scope: an initial migration (`src/db/migrations/001-initial.sql` matching `schema.sql`) and unit tests for the Expediter, handlers, and prompt assembler (`test/expediter.test.js`, `test/handlers.test.js`, `test/prompt-assembler.test.js`). Anything beyond is in the table above.
+
+The "Anything beyond" clause references `Out of scope` items — primarily integration tests and end-to-end tests, which `converse.test.js` is not. The shipped suite is pure unit (mocks `pantry`, `chef`, `expediter`, `prompt-assembler`, `cost-ceiling`), aligned with the §11 unit-tests-only posture, but its file is not enumerated.
+
+**Workaround applied.** None — `test/converse.test.js` shipped per WO-303.7b. Eight cases, all green; full Phase-0-through-6 suite (80 tests across 9 files) green.
+
+**Reconciliation target.** Update gold vision §11 *Non-goals* "In scope" paragraph: either (a) extend the named test-file list to include `converse.test.js` (and the five Phase 5 security test files per D5), or (b) reword the paragraph to clarify that the named files are the canon-prescribed minimum and per-surface unit tests are normal-and-expected. (b) is the more durable change — closes both D5 and D11 with one edit and avoids re-opening the same gap each phase. Phase 9.D in Cycle 304.
+
+---
+
+_Last updated: 2026-04-30 — Cycle 303, Session 303.7._
