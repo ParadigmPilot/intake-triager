@@ -15,17 +15,23 @@ import Anthropic from '@anthropic-ai/sdk';
 const client = new Anthropic();
 const MODEL = process.env.MODEL ?? 'claude-sonnet-4-20250514';
 const MAX_TOKENS = 4096;
+const E2E_TEMPERATURE = process.env.E2E_TEMPERATURE !== undefined
+  ? Number(process.env.E2E_TEMPERATURE)
+  : undefined;
 
 export async function cook(briefing) {
   const systemMessage = briefing.find((m) => m.role === 'system');
   const messages = briefing.filter((m) => m.role !== 'system');
 
-  const response = await client.messages.create({
+  const request = {
     model: MODEL,
     max_tokens: MAX_TOKENS,
     system: systemMessage?.content,
     messages,
-  });
+  };
+  if (E2E_TEMPERATURE !== undefined) request.temperature = E2E_TEMPERATURE;
+
+  const response = await client.messages.create(request);
 
   const text = response.content[0].text;
   const usage = {
