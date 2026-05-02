@@ -17,5 +17,9 @@ export default defineConfig({
     reporters: ['default'],
     hookTimeout: 30_000,
     testTimeout: 60_000,
+    // Serial test-file execution: tests share DEMO_OWNER_ID (per gold vision
+    // §10 item 11; build plan §Phase 8) and Path 1 patches process.stdout.write
+    // for log-capture. Both require non-parallel files.
+    fileParallelism: false,
   },
 });

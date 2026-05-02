@@ -1,7 +1,11 @@
-// Test DB helpers for Phase 8 E2E (per WO-304.1.a).
+// Test DB helpers for Phase 8 E2E.
 // Owner-scoped — never truncates the table; deletes only rows matching
-// the test's unique owner_id. Each test gets a fresh UUID via
-// helpers/owner.js so concurrent test rows never collide.
+// the given owner_id. Path tests share DEMO_OWNER_ID (per gold vision
+// §10 item 11; build plan §Phase 8); afterEach calls deleteByOwner to
+// purge that owner's rows from the isolated test database. Serial
+// test-file execution is enforced by vitest.e2e.config.js
+// (fileParallelism: false) since shared owner_id rules out parallel
+// cleanup.
 
 import pg from 'pg';
 
