@@ -32,6 +32,7 @@ import { parse, dispatch } from './expediter.js';
 import { assemblePrompt } from './prompt-assembler.js';
 import { isolateHistory } from './security/prompt-injection.js';
 import { checkCostCeiling } from './security/cost-ceiling.js';
+import { log } from './observability.js';
 
 const GENERIC = 'we had a problem recording this — please try again';
 const ASSISTANT_ROLE = 'assistant';
@@ -42,6 +43,13 @@ export default async function converse(req, res) {
   try {
     const owner_id = req.user.id;
     const { content, conversation_id: providedId } = req.body;
+
+    log({
+      level: 'info',
+      event: 'converse_turn_received',
+      owner_id,
+      ...(providedId ? { conversation_id: providedId } : {}),
+    });
 
     if (!providedId) {
       const created = await pantry.insertConversation(owner_id);
@@ -59,6 +67,12 @@ export default async function converse(req, res) {
 
     const { exceeded } = await checkCostCeiling({ conversation_id, owner_id });
     if (exceeded) {
+      log({
+        level: 'warn',
+        event: 'converse_token_ceiling_exceeded',
+        conversation_id,
+        owner_id,
+      });
       return res.status(429).json({
         error: { code: 'TOKEN_CEILING_EXCEEDED', message: GENERIC },
       });
@@ -97,15 +111,27 @@ export default async function converse(req, res) {
       return result.rows[0].status;
     });
 
+    log({
+      level: 'info',
+      event: 'converse_turn_complete',
+      conversation_id,
+      owner_id,
+      status: finalStatus,
+    });
+
     return res.status(200).json({
       conversation_id,
       reply: { role: ASSISTANT_ROLE, content: prose },
       status: finalStatus,
     });
   } catch (err) {
-    console.error(
-      `converse handler error (conversation_id=${conversation_id ?? 'unknown'}): ${err.message}`
-    );
+    log({
+      level: 'error',
+      event: 'converse_handler_error',
+      conversation_id: conversation_id ?? null,
+      owner_id: req.user?.id ?? null,
+      error: err.message,
+    });
     if (!res.headersSent) {
       return res.status(500).json({
         error: { code: 'INTERNAL_ERROR', message: GENERIC },

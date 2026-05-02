@@ -46,6 +46,7 @@ Each entry below names a **Reconciliation target**: the file(s) and section(s) t
 | D11   | MINOR    | Phase 6 | Cycle 303.7 | Open   | Gold vision §11 Non-goals silent on `converse.test.js`                         |
 | D12   | MINOR    | Phase 6 | Cycle 303.7 | Reconciled | `dotenv` declared in `package.json` but never imported                     |
 | D13   | MINOR    | Phase 7 | Cycle 303.8 | Reconciled | PR #9 squash-merged when merge criterion required `Create a merge commit`  |
+| D16   | MAJOR    | Phase 6 | Cycle 304.3 | Reconciled | Phase 6 shipped without gold vision §10 JSON one-line-per-event logging      |
 
 ---
 
@@ -453,4 +454,25 @@ Reconciled in-cycle by the recovery sequence above; the durable preventative fix
 
 ---
 
-_Last updated: 2026-04-30 — Cycle 303, Session 303.8.a (D13 appended)._
+### D16 — Phase 6 shipped without gold vision §10 JSON one-line-per-event logging
+
+| Field       | Value                                                        |
+| ----------- | ------------------------------------------------------------ |
+| Severity    | MAJOR                                                        |
+| Phase       | Phase 6 (The Pass — `/converse` handler)                     |
+| Discovered  | Cycle 304, Session 304.2 (WO-304.2.a v2 first execution)     |
+| Status      | Reconciled                                                   |
+
+**Discovery.** Path 1's first execution drove Taylor through the full conversation cleanly (marker emitted, status flipped, `raw_marker` intact) and then failed on the §10 observability assertion: zero captured stdout lines parsed as JSON events with `timestamp`, `level`, `event`, `conversation_id`, `owner_id`. The Phase 6 `converse.js` handler emits no structured logs (only one `console.error` in the catch block, writing non-JSON to stderr). The Phase 7 `server.js` boot emits a non-JSON `console.log` line. Gold vision §10 is unambiguous on the requirement; the build did not include it. WO-304.2.0 v1's first execution surfaced a second instance of the same gap in the unit-test layer: `test/converse.test.js:200–224` asserts the legacy `console.error` mechanism via `vi.spyOn(console, 'error')` — the test ratified the §10 violation as "tested behavior."
+
+**Evidence.** `src/backend/converse.js` as shipped through Cycle 303 contained no `log()` or JSON-stdout writes — only one `console.error` writing a string to stderr inside the catch. `src/backend/server.js` (extracted by WO-304.1.a) contained `console.log(\`[backend] listening on port ${PORT}\`)` — non-JSON. `test/converse.test.js` asserted `expect(errSpy).toHaveBeenCalled()` against a `console.error` spy. Path 1's log-capture assertion (gold vision §10 fields present on at least one captured stdout line) returned zero matches.
+
+**Workaround applied.** WO-304.2.0 (Cycle 304, Session 304.3) creates `src/backend/observability.js` as the single producer of JSON one-line-per-event stdout logs and integrates it at five emission points in `converse.js` (`turn_received`, `token_ceiling_exceeded`, `turn_complete`, `handler_error`, plus the catch-block error replacing `console.error`) and one in `server.js` (`server_listening`). v2 of this WO additionally updates `test/converse.test.js` lines 200–224 — the legacy `console.error` spy that asserted the pre-§10 mechanism — to spy on `process.stdout.write` and assert the JSON-shaped event. After WO-304.2.0 ships, Path 1's §10 assertion finds matching events on every successful turn, and the `converse.test.js` unit suite asserts the §10-conformant error log path.
+
+**Reconciliation target.** Closed in-cycle by WO-304.2.0. Phase 9.D may optionally fold a §Phase 6 amendment into `intake-triager-build-plan.md` to enumerate "JSON one-line-per-event logging via `observability.js`" as an explicit Phase 6 deliverable, formalizing what was implicit in gold vision §10 from the start. Out-of-`/converse` modules (`pantry.js`, `chef.js`, `expediter.js`, `handlers/*.js`, `security/*.js`) are not yet instrumented; two pre-existing `console.error` instances surfaced during v1 execution at `expediter.js:55` and `handlers/triage-record.js:86`. Bringing them under §10 is tracked separately as part of D15 / Phase 9.D's §4 *Repo structure* amendment, or as a Cycle 305+ candidate if the §10 surface stays narrow.
+
+**Status.** Reconciled (in-cycle by WO-304.2.0).
+
+---
+
+_Last updated: 2026-05-01 — Cycle 304, Session 304.3 (D16 appended, born Reconciled)._
