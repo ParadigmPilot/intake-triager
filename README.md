@@ -271,6 +271,25 @@ The repo ships `.env.example` with **nine keys**. Production values override per
 
 The frontend (Vite) runs on `:5173`. The backend listens on `PORT`.
 
+## Observability
+
+The basic posture this repo ships:
+
+- **Structured JSON logs to stdout, one line per event.** Required fields: `timestamp` (ISO-8601 UTC), `level`, `event`, `conversation_id` (when applicable), `owner_id` (when applicable), `error` (when level is `error`).
+- **No metrics, no tracing, no APM.** Single-instance teaching code does not need them.
+- **No request-ID propagation.** Single-instance only.
+
+The single producer of structured logs is `src/backend/observability.js`, which exports `log({level, event, ...fields})`. The `/converse` handler emits four event categories at the documented points:
+
+| Event | Level | Where |
+| --- | --- | --- |
+| `converse_turn_received` | `info` | Top of the handler, after `owner_id` is known |
+| `converse_token_ceiling_exceeded` | `warn` | Before the 429 short-circuit |
+| `converse_turn_complete` | `info` | After the transaction commits, before the success response |
+| `converse_handler_error` | `error` | Catch block (carries `error.message`) |
+
+Boot emits `server_listening` from `src/backend/server.js`. Production-grade observability — metrics, distributed tracing, log aggregation, request correlation, error reporting — is taught in *Implementing Standards for LLM Apps*.
+
 ## License
 
 Apache-2.0.
