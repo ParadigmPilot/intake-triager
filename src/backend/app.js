@@ -36,7 +36,6 @@ function identityStub(req, res, next) {
 }
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(corsMiddleware());
 
@@ -48,9 +47,5 @@ app.post(
   identityStub,
   converse
 );
-
-app.listen(PORT, () => {
-  console.log(`[backend] listening on port ${PORT}`);
-});
 
 export default app;

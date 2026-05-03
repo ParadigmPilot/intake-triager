@@ -209,7 +209,9 @@ describe('converse handler', () => {
       };
       return await cb(tx);
     });
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const stdoutSpy = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
 
     const req = makeReq({ content: 'hi', conversation_id: 'existing-id' });
     const res = makeRes();
@@ -219,8 +221,28 @@ describe('converse handler', () => {
     expect(res.json).toHaveBeenCalledWith({
       error: { code: 'INTERNAL_ERROR', message: expect.any(String) },
     });
-    expect(errSpy).toHaveBeenCalled();
-    errSpy.mockRestore();
+
+    // Per gold vision §10 (WO-304.2.0): handler errors emit a JSON
+    // one-line-per-event log via observability.log → process.stdout.write
+    // with level='error' and event='converse_handler_error'. The captured
+    // line is JSON terminated by '\n'; JSON.parse tolerates trailing
+    // whitespace, so we parse the call argument directly.
+    const errorCall = stdoutSpy.mock.calls.find((call) => {
+      try {
+        const parsed = JSON.parse(call[0]);
+        return (
+          parsed.level === 'error' &&
+          parsed.event === 'converse_handler_error'
+        );
+      } catch {
+        return false;
+      }
+    });
+    expect(errorCall).toBeTruthy();
+    const parsed = JSON.parse(errorCall[0]);
+    expect(parsed.error).toBe('handler boom');
+
+    stdoutSpy.mockRestore();
   });
 
   it('prompt-injection isolation — assemblePrompt receives isolateHistory output as history', async () => {

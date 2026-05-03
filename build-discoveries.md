@@ -46,6 +46,11 @@ Each entry below names a **Reconciliation target**: the file(s) and section(s) t
 | D11   | MINOR    | Phase 6 | Cycle 303.7 | Open   | Gold vision §11 Non-goals silent on `converse.test.js`                         |
 | D12   | MINOR    | Phase 6 | Cycle 303.7 | Reconciled | `dotenv` declared in `package.json` but never imported                     |
 | D13   | MINOR    | Phase 7 | Cycle 303.8 | Reconciled | PR #9 squash-merged when merge criterion required `Create a merge commit`  |
+| D16   | MAJOR    | Phase 6 | Cycle 304.3 | Reconciled | Phase 6 shipped without gold vision §10 JSON one-line-per-event logging      |
+| D14   | MINOR    | Phase 8 | Cycle 304.2 | Open       | Path-test user prompts authored at WO draft time, not pre-existing in canon  |
+| D15   | MINOR    | Phase 8 | Cycle 304.2 | Open       | Phase 8 infrastructure adds files beyond gold vision §4 Repo structure       |
+| D17   | MINOR    | Phase 8 | Cycle 304.4 | Reconciled | `.env.test.example` template missing `ORG_NAME` and `CRISIS_LINE`            |
+| D18   | MINOR    | Phase 6 | Cycle 304.4 | Open       | `converse.js` propagates `undefined` from env vars; no boot-time validation  |
 
 ---
 
@@ -453,4 +458,169 @@ Reconciled in-cycle by the recovery sequence above; the durable preventative fix
 
 ---
 
-_Last updated: 2026-04-30 — Cycle 303, Session 303.8.a (D13 appended)._
+### D16 — Phase 6 shipped without gold vision §10 JSON one-line-per-event logging
+
+| Field       | Value                                                        |
+| ----------- | ------------------------------------------------------------ |
+| Severity    | MAJOR                                                        |
+| Phase       | Phase 6 (The Pass — `/converse` handler)                     |
+| Discovered  | Cycle 304, Session 304.2 (WO-304.2.a v2 first execution)     |
+| Status      | Reconciled                                                   |
+
+**Discovery.** Path 1's first execution drove Taylor through the full conversation cleanly (marker emitted, status flipped, `raw_marker` intact) and then failed on the §10 observability assertion: zero captured stdout lines parsed as JSON events with `timestamp`, `level`, `event`, `conversation_id`, `owner_id`. The Phase 6 `converse.js` handler emits no structured logs (only one `console.error` in the catch block, writing non-JSON to stderr). The Phase 7 `server.js` boot emits a non-JSON `console.log` line. Gold vision §10 is unambiguous on the requirement; the build did not include it. WO-304.2.0 v1's first execution surfaced a second instance of the same gap in the unit-test layer: `test/converse.test.js:200–224` asserts the legacy `console.error` mechanism via `vi.spyOn(console, 'error')` — the test ratified the §10 violation as "tested behavior."
+
+**Evidence.** `src/backend/converse.js` as shipped through Cycle 303 contained no `log()` or JSON-stdout writes — only one `console.error` writing a string to stderr inside the catch. `src/backend/server.js` (extracted by WO-304.1.a) contained `console.log(\`[backend] listening on port ${PORT}\`)` — non-JSON. `test/converse.test.js` asserted `expect(errSpy).toHaveBeenCalled()` against a `console.error` spy. Path 1's log-capture assertion (gold vision §10 fields present on at least one captured stdout line) returned zero matches.
+
+**Workaround applied.** WO-304.2.0 (Cycle 304, Session 304.3) creates `src/backend/observability.js` as the single producer of JSON one-line-per-event stdout logs and integrates it at five emission points in `converse.js` (`turn_received`, `token_ceiling_exceeded`, `turn_complete`, `handler_error`, plus the catch-block error replacing `console.error`) and one in `server.js` (`server_listening`). v2 of this WO additionally updates `test/converse.test.js` lines 200–224 — the legacy `console.error` spy that asserted the pre-§10 mechanism — to spy on `process.stdout.write` and assert the JSON-shaped event. After WO-304.2.0 ships, Path 1's §10 assertion finds matching events on every successful turn, and the `converse.test.js` unit suite asserts the §10-conformant error log path.
+
+**Reconciliation target.** Closed in-cycle by WO-304.2.0. Phase 9.D may optionally fold a §Phase 6 amendment into `intake-triager-build-plan.md` to enumerate "JSON one-line-per-event logging via `observability.js`" as an explicit Phase 6 deliverable, formalizing what was implicit in gold vision §10 from the start. Out-of-`/converse` modules (`pantry.js`, `chef.js`, `expediter.js`, `handlers/*.js`, `security/*.js`) are not yet instrumented; two pre-existing `console.error` instances surfaced during v1 execution at `expediter.js:55` and `handlers/triage-record.js:86`. Bringing them under §10 is tracked separately as part of D15 / Phase 9.D's §4 *Repo structure* amendment, or as a Cycle 305+ candidate if the §10 surface stays narrow.
+
+**Status.** Reconciled (in-cycle by WO-304.2.0).
+
+---
+
+### D14 — Path-test user prompts authored at WO draft time, not pre-existing in canon
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 8 (E2E verification)                           |
+| Discovered  | Cycle 304, Session 304.2 (WO-304.2.a drafting)       |
+| Status      | Open                                                 |
+
+**Discovery.** Phase 8 path tests require concrete user-side prompt scripts that drive Taylor through each rule path (standard intake, mandatory escalation, crisis-end). Canon does not specify these prompts: gold vision §6 names Taylor's behavior contract and §11 names the three rule paths; build plan §Phase 8 names success criteria; `system.md` defines Taylor's rules. None supply candidate user messages.
+
+**Evidence.** Reading gold vision v1.6 §6 / §11, build plan §Phase 8, and `system.md` end-to-end yields only behavioral assertions — no user-message exemplars. The Cycle 303 Session 303.9 test-data plan scoped `temperature: 0` and isolated DB but not prompt content.
+
+**Workaround applied.** Each path WO authors a `USER_MESSAGES` constant inline at the top of its test file (Path 1 in `test/e2e/standard-intake.test.js`; Paths 2 and 3 in their own test files via WO-304.2.b–c). Each script is canon-grounded against `system.md` — the routine, the trigger language, the crisis-end signal — but the literal text is build-layer.
+
+**Reconciliation target.** Phase 9.D (Cycle 304). Disposition decision: leave as build-layer (default — prompts are test data, not canon), or lift to a gold-vision Appendix C *Phase 8 test data* (canon-level — couples canon to a specific phrasing). Default disposition argues for build-layer; the path tests are pedagogical demonstrations of canon, not extensions of it.
+
+**Status.** Open.
+
+---
+
+### D15 — Phase 8 infrastructure adds files beyond gold vision §4 Repo structure
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 8 (E2E verification)                           |
+| Discovered  | Cycle 304, Session 304.2 (WO-304.2.a drafting)       |
+| Status      | Open                                                 |
+
+**Discovery.** Phase 8 E2E infrastructure (WO-304.1.a) and the Path 1 test (WO-304.2.a, with WO-304.2.b–c forthcoming) add files to the repo that are not enumerated in gold vision §4 *Repo structure*. The §4 prescribed tree omits these by virtue of being pre-Phase-8.
+
+**Evidence.** Files added beyond §4 by Phase 8 work:
+
+- **Root.** `vitest.e2e.config.js` (Vitest E2E config; WO-304.1.a), `.env.test.example` (E2E env template; WO-304.1.a).
+- **`src/backend/`.** `server.js` (extracted from `app.js` to break the import-time `app.listen()` side-effect; WO-304.1.a). `observability.js` (single producer of §10 stdout logs; WO-304.2.0).
+- **`test/e2e/`.** `helpers/db.js`, `helpers/server.js` (WO-304.1.a); `helpers/conversation.js`, `helpers/log-capture.js`, `standard-intake.test.js` (WO-304.2.a). Forthcoming: `mandatory-escalation.test.js` (WO-304.2.b), `crisis-end.test.js` (WO-304.2.c). The `test/e2e/.gitkeep` placeholder created by WO-304.1.a is rendered moot once `.test.js` files exist; deletion is a Phase 9.D consideration, not a build-layer fix.
+
+The orphaned `test/e2e/helpers/owner.js` (WO-304.1.a) is **not** part of D15's scope — it is deleted by WO-304.2.a Edit 4 in the same session it became dead code, not deferred.
+
+Pre-existing additions to the repo file tree beyond §4 are tracked separately: `src/backend/security/cors.js`, `cost-ceiling.js` (D4); `test/cors.test.js`, `cost-ceiling.test.js`, `input-validation.test.js`, `prompt-injection.test.js`, `rate-limit.test.js` (D4 / D5 family); `test/converse.test.js` (D11). D15 covers Phase 8 additions only; the broader §4 amendment is the union of D4, D5, D9, D11, D15.
+
+**Workaround applied.** Files exist in the repo as required for Phase 8 mechanism per gold vision §11 (automated runnability) and build plan §Phase 8. §4 *Repo structure* does not block their existence; it just doesn't list them.
+
+**Reconciliation target.** Phase 9.D (Cycle 304). Single §4 *Repo structure* amendment in the v1.7 graduation pass that includes the Phase 8 additions (this entry) plus the pre-existing additions in D4, D5, D9, D11. The amended §4 then reads against the as-built repo without divergence.
+
+**Status.** Open.
+
+---
+
+### D17 — `.env.test.example` template missing `ORG_NAME` and `CRISIS_LINE`
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 8 (E2E verification)                           |
+| Discovered  | Cycle 304, Session 304.4 (WO-304.2.c drafting)       |
+| Status      | Reconciled                                           |
+
+**Discovery.** Path 3 (crisis-end) is the only E2E path that exercises `{{CRISIS_LINE}}` substitution end-to-end, because Rule 7 is the only `system.md` rule that surfaces the placeholder to user-facing prose. While drafting WO-304.2.c, an audit of the substitution pipeline traced `{{CRISIS_LINE}}` from `src/backend/prompts/system.md` (substitution target) through `src/backend/prompt-assembler.js` (silent fallthrough on unknown placeholders — leaves `{{NAME}}` literal in place if the placeholders object lacks the key) to `src/backend/converse.js` (caller — reads `process.env.ORG_NAME` and `process.env.CRISIS_LINE` per turn with no fallback). The `.env.test.example` template ships with neither var. Without the addition, Path 3's assertion that Taylor surfaces the configured `CRISIS_LINE` value to the patron fails because the value is `undefined`, which `String(undefined)` substitutes as the literal string `"undefined"` into the system prompt's `[CONTEXT]` block.
+
+**Concrete exposure.** Paths 1 and 2 stay accidentally green at `temperature: 0` despite the same wiring gap, because Rules 1–6 do not echo `{{CRISIS_LINE}}` or `{{ORG_NAME}}` to the patron — Taylor reads the malformed `[CONTEXT]` line and ignores it. Rule 7 is the only path that requires the value to be present and well-formed in the surfaced reply.
+
+**Evidence.** Pre-fix `.env.test.example` (verbatim, last five lines):
+DATABASE_URL=postgresql://localhost:5432/intake_triager_test
+ANTHROPIC_API_KEY=
+MODEL=claude-sonnet-4-20250514
+E2E_TEMPERATURE=0
+PORT=0
+
+`src/backend/converse.js` lines 60–64 (verbatim):
+
+```javascript
+const placeholders = {
+  TODAY: new Date().toISOString().slice(0, 10),
+  ORG_NAME: process.env.ORG_NAME,
+  CRISIS_LINE: process.env.CRISIS_LINE,
+};
+```
+
+`src/backend/prompt-assembler.js` `substitute` function (verbatim):
+
+```javascript
+function substitute(template, placeholders) {
+  return template.replace(/\{\{(\w+)\}\}/g, (match, name) => {
+    return Object.prototype.hasOwnProperty.call(placeholders, name)
+      ? String(placeholders[name])
+      : match;
+  });
+}
+```
+
+The `placeholders` object always contains the keys `TODAY`, `ORG_NAME`, `CRISIS_LINE` — `hasOwnProperty` returns true even when the value is `undefined`. `String(undefined) === 'undefined'`. The substitution writes the literal four-character string `undefined` into the system prompt.
+
+**Workaround applied.** WO-304.2.c Edit 1 adds two lines to `.env.test.example`:
+ORG_NAME=Test Org
+CRISIS_LINE=E2E-TEST-CRISIS-LINE-555-0100
+
+The `CRISIS_LINE` value is a sentinel chosen for grep-uniqueness: the `E2E-TEST-` prefix is visibly synthetic and the `555-0100` suffix is the NANP fictional-number convention reserved for fiction. Path 3 asserts the sentinel string appears in at least two assistant replies (the trigger turn and the subsequent refusal turn — Rule 7 mandates both surfacings). Sam manually copies the same two lines to local `.env.test` (gitignored) before WO execution.
+
+**Reconciliation target.** Closed in-cycle by WO-304.2.c Edit 1. Entry retained for audit history per the spec's "Reconciled" definition. The deeper `converse.js` concern — production code reading `process.env.X` with no boot-time validation, propagating `undefined` silently into a user-facing prompt — is a distinct gap, logged separately as **D18 (Open)** below for Phase 9.D disposition.
+
+**Status.** Reconciled (in-cycle by WO-304.2.c).
+
+---
+
+### D18 — `converse.js` propagates `undefined` from env vars; no boot-time validation
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 6 (The Pass — `/converse` handler)             |
+| Discovered  | Cycle 304, Session 304.4 (WO-304.2.c drafting)       |
+| Status      | Open                                                 |
+
+**Discovery.** Distinct from D17: D17 closes the test-environment template gap; D18 covers the upstream code-level pattern that allowed the gap to stay invisible across Phases 6 and 7. `src/backend/converse.js` constructs the `placeholders` object inline at every turn:
+
+```javascript
+const placeholders = {
+  TODAY: new Date().toISOString().slice(0, 10),
+  ORG_NAME: process.env.ORG_NAME,
+  CRISIS_LINE: process.env.CRISIS_LINE,
+};
+```
+
+When either env var is unset, the value is `undefined`; `prompt-assembler.js`'s `substitute` function calls `String(undefined)` and writes the literal `"undefined"` into the system prompt's `[CONTEXT]` block. There is no boot-time validation that asserts both vars are present at startup; there is no fallback to a defensible default; there is no per-turn warning to the §10 log when either is missing. Rules 1–6 don't echo these placeholders to user-facing prose, so the malformed context is silently ignored — every turn against an environment missing either var goes through with a malformed prompt. Rule 7 is the only path that exposes the gap to the patron.
+
+**Concrete exposure.** Until D17 was reconciled in 304.4, every E2E test run against the unconfigured `.env.test` produced silently-malformed system prompts. Production runs against a misconfigured `.env` (or shell environment) would do the same — Taylor would emit `Crisis resource line: undefined` to the patron when Rule 7 fires. The gap is detectable in production only by running Path 3 (or equivalent crisis-trigger probe); routine runs against Rules 1–6 would not surface it.
+
+**Evidence.** As D17, plus the absence of any `assert(process.env.CRISIS_LINE, ...)` or equivalent fail-fast in `app.js` or `server.js` boot. `observability.js` (Phase 6 / WO-304.2.0) emits no `config_loaded` event with the env-derived placeholder values; no `placeholder_missing` warn-level event exists.
+
+**Workaround applied.** None — D17's `.env.test.example` fix closes the test-environment gap, but no production-side code change is shipped in WO-304.2.c. Path 3 verifies Taylor surfaces the configured `CRISIS_LINE`; it does not assert config-validation hardening.
+
+**Reconciliation target.** Gold vision §6 (*Placeholder convention* / TRUSTED-CONTEXT pool semantics) and / or §10 (*Configuration*) amendment in Phase 9.D, Cycle 304. Two complementary disposition candidates:
+
+1. **Boot-time validation.** `app.js` (or `server.js`) asserts `process.env.ORG_NAME` and `process.env.CRISIS_LINE` are non-empty strings at startup; logs a `config_loaded` event on success; `process.exit(1)` on failure. Closes the gap fail-fast.
+2. **Per-turn fallback + log.** `converse.js` falls back to a sentinel literal (e.g., `'(crisis line not configured)'`) when the env var is unset and emits a §10 `warn`-level `placeholder_missing` event. Allows boot to proceed but surfaces the gap on every affected turn.
+
+Owner ruling needed during Phase 9.D. Either (or both) disposition belongs in `system.md` `[CONTEXT]` block semantics: should an unset trusted-context placeholder fail boot, fall back, or both?
+
+**Status.** Open.
+
+---
+
+_Last updated: 2026-05-02 — Cycle 304, Session 304.4 (D17 + D18 appended)._

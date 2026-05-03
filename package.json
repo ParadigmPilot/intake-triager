@@ -5,13 +5,14 @@
   "license": "Apache-2.0",
   "private": true,
   "type": "module",
-  "main": "src/backend/app.js",
+  "main": "src/backend/server.js",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "dev": "concurrently \"node --watch src/backend/app.js\" \"vite\"",
+    "dev": "concurrently \"node --watch src/backend/server.js\" \"vite\"",
     "test": "vitest run --passWithNoTests",
+    "test:e2e": "vitest run --config vitest.e2e.config.js --passWithNoTests",
     "build": "vite build"
   },
   "dependencies": {
