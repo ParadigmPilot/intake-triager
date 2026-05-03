@@ -49,6 +49,8 @@ Each entry below names a **Reconciliation target**: the file(s) and section(s) t
 | D16   | MAJOR    | Phase 6 | Cycle 304.3 | Reconciled | Phase 6 shipped without gold vision §10 JSON one-line-per-event logging      |
 | D14   | MINOR    | Phase 8 | Cycle 304.2 | Open       | Path-test user prompts authored at WO draft time, not pre-existing in canon  |
 | D15   | MINOR    | Phase 8 | Cycle 304.2 | Open       | Phase 8 infrastructure adds files beyond gold vision §4 Repo structure       |
+| D17   | MINOR    | Phase 8 | Cycle 304.4 | Reconciled | `.env.test.example` template missing `ORG_NAME` and `CRISIS_LINE`            |
+| D18   | MINOR    | Phase 6 | Cycle 304.4 | Open       | `converse.js` propagates `undefined` from env vars; no boot-time validation  |
 
 ---
 
@@ -527,4 +529,98 @@ Pre-existing additions to the repo file tree beyond §4 are tracked separately: 
 
 ---
 
-_Last updated: 2026-05-01 — Cycle 304, Session 304.3 (D14 + D15 appended)._
+### D17 — `.env.test.example` template missing `ORG_NAME` and `CRISIS_LINE`
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 8 (E2E verification)                           |
+| Discovered  | Cycle 304, Session 304.4 (WO-304.2.c drafting)       |
+| Status      | Reconciled                                           |
+
+**Discovery.** Path 3 (crisis-end) is the only E2E path that exercises `{{CRISIS_LINE}}` substitution end-to-end, because Rule 7 is the only `system.md` rule that surfaces the placeholder to user-facing prose. While drafting WO-304.2.c, an audit of the substitution pipeline traced `{{CRISIS_LINE}}` from `src/backend/prompts/system.md` (substitution target) through `src/backend/prompt-assembler.js` (silent fallthrough on unknown placeholders — leaves `{{NAME}}` literal in place if the placeholders object lacks the key) to `src/backend/converse.js` (caller — reads `process.env.ORG_NAME` and `process.env.CRISIS_LINE` per turn with no fallback). The `.env.test.example` template ships with neither var. Without the addition, Path 3's assertion that Taylor surfaces the configured `CRISIS_LINE` value to the patron fails because the value is `undefined`, which `String(undefined)` substitutes as the literal string `"undefined"` into the system prompt's `[CONTEXT]` block.
+
+**Concrete exposure.** Paths 1 and 2 stay accidentally green at `temperature: 0` despite the same wiring gap, because Rules 1–6 do not echo `{{CRISIS_LINE}}` or `{{ORG_NAME}}` to the patron — Taylor reads the malformed `[CONTEXT]` line and ignores it. Rule 7 is the only path that requires the value to be present and well-formed in the surfaced reply.
+
+**Evidence.** Pre-fix `.env.test.example` (verbatim, last five lines):
+DATABASE_URL=postgresql://localhost:5432/intake_triager_test
+ANTHROPIC_API_KEY=
+MODEL=claude-sonnet-4-20250514
+E2E_TEMPERATURE=0
+PORT=0
+
+`src/backend/converse.js` lines 60–64 (verbatim):
+
+```javascript
+const placeholders = {
+  TODAY: new Date().toISOString().slice(0, 10),
+  ORG_NAME: process.env.ORG_NAME,
+  CRISIS_LINE: process.env.CRISIS_LINE,
+};
+```
+
+`src/backend/prompt-assembler.js` `substitute` function (verbatim):
+
+```javascript
+function substitute(template, placeholders) {
+  return template.replace(/\{\{(\w+)\}\}/g, (match, name) => {
+    return Object.prototype.hasOwnProperty.call(placeholders, name)
+      ? String(placeholders[name])
+      : match;
+  });
+}
+```
+
+The `placeholders` object always contains the keys `TODAY`, `ORG_NAME`, `CRISIS_LINE` — `hasOwnProperty` returns true even when the value is `undefined`. `String(undefined) === 'undefined'`. The substitution writes the literal four-character string `undefined` into the system prompt.
+
+**Workaround applied.** WO-304.2.c Edit 1 adds two lines to `.env.test.example`:
+ORG_NAME=Test Org
+CRISIS_LINE=E2E-TEST-CRISIS-LINE-555-0100
+
+The `CRISIS_LINE` value is a sentinel chosen for grep-uniqueness: the `E2E-TEST-` prefix is visibly synthetic and the `555-0100` suffix is the NANP fictional-number convention reserved for fiction. Path 3 asserts the sentinel string appears in at least two assistant replies (the trigger turn and the subsequent refusal turn — Rule 7 mandates both surfacings). Sam manually copies the same two lines to local `.env.test` (gitignored) before WO execution.
+
+**Reconciliation target.** Closed in-cycle by WO-304.2.c Edit 1. Entry retained for audit history per the spec's "Reconciled" definition. The deeper `converse.js` concern — production code reading `process.env.X` with no boot-time validation, propagating `undefined` silently into a user-facing prompt — is a distinct gap, logged separately as **D18 (Open)** below for Phase 9.D disposition.
+
+**Status.** Reconciled (in-cycle by WO-304.2.c).
+
+---
+
+### D18 — `converse.js` propagates `undefined` from env vars; no boot-time validation
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 6 (The Pass — `/converse` handler)             |
+| Discovered  | Cycle 304, Session 304.4 (WO-304.2.c drafting)       |
+| Status      | Open                                                 |
+
+**Discovery.** Distinct from D17: D17 closes the test-environment template gap; D18 covers the upstream code-level pattern that allowed the gap to stay invisible across Phases 6 and 7. `src/backend/converse.js` constructs the `placeholders` object inline at every turn:
+
+```javascript
+const placeholders = {
+  TODAY: new Date().toISOString().slice(0, 10),
+  ORG_NAME: process.env.ORG_NAME,
+  CRISIS_LINE: process.env.CRISIS_LINE,
+};
+```
+
+When either env var is unset, the value is `undefined`; `prompt-assembler.js`'s `substitute` function calls `String(undefined)` and writes the literal `"undefined"` into the system prompt's `[CONTEXT]` block. There is no boot-time validation that asserts both vars are present at startup; there is no fallback to a defensible default; there is no per-turn warning to the §10 log when either is missing. Rules 1–6 don't echo these placeholders to user-facing prose, so the malformed context is silently ignored — every turn against an environment missing either var goes through with a malformed prompt. Rule 7 is the only path that exposes the gap to the patron.
+
+**Concrete exposure.** Until D17 was reconciled in 304.4, every E2E test run against the unconfigured `.env.test` produced silently-malformed system prompts. Production runs against a misconfigured `.env` (or shell environment) would do the same — Taylor would emit `Crisis resource line: undefined` to the patron when Rule 7 fires. The gap is detectable in production only by running Path 3 (or equivalent crisis-trigger probe); routine runs against Rules 1–6 would not surface it.
+
+**Evidence.** As D17, plus the absence of any `assert(process.env.CRISIS_LINE, ...)` or equivalent fail-fast in `app.js` or `server.js` boot. `observability.js` (Phase 6 / WO-304.2.0) emits no `config_loaded` event with the env-derived placeholder values; no `placeholder_missing` warn-level event exists.
+
+**Workaround applied.** None — D17's `.env.test.example` fix closes the test-environment gap, but no production-side code change is shipped in WO-304.2.c. Path 3 verifies Taylor surfaces the configured `CRISIS_LINE`; it does not assert config-validation hardening.
+
+**Reconciliation target.** Gold vision §6 (*Placeholder convention* / TRUSTED-CONTEXT pool semantics) and / or §10 (*Configuration*) amendment in Phase 9.D, Cycle 304. Two complementary disposition candidates:
+
+1. **Boot-time validation.** `app.js` (or `server.js`) asserts `process.env.ORG_NAME` and `process.env.CRISIS_LINE` are non-empty strings at startup; logs a `config_loaded` event on success; `process.exit(1)` on failure. Closes the gap fail-fast.
+2. **Per-turn fallback + log.** `converse.js` falls back to a sentinel literal (e.g., `'(crisis line not configured)'`) when the env var is unset and emits a §10 `warn`-level `placeholder_missing` event. Allows boot to proceed but surfaces the gap on every affected turn.
+
+Owner ruling needed during Phase 9.D. Either (or both) disposition belongs in `system.md` `[CONTEXT]` block semantics: should an unset trusted-context placeholder fail boot, fall back, or both?
+
+**Status.** Open.
+
+---
+
+_Last updated: 2026-05-02 — Cycle 304, Session 304.4 (D17 + D18 appended)._
