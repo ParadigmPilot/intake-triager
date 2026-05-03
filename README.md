@@ -149,6 +149,30 @@ The backend exposes one external route. The Runner calls only this route.
 
 The first turn omits `conversation_id`; the handler mints a new UUID, inserts a row in `conversations` with `status='active'`, and returns the new id. Subsequent turns pass back the `conversation_id` from the prior response. End-to-end multi-turn flow asserted in `test/e2e/standard-intake.test.js`.
 
+## Database
+
+Three tables, all carrying `owner_id` from day one. Single-tenant by design; multi-tenant isolation is taught in *Implementing Standards for LLM Apps* (gold vision §11).
+
+### Tables
+
+| Table | Purpose | Key columns |
+| --- | --- | --- |
+| `conversations` | One row per intake | `id` UUID PK, `owner_id` UUID NOT NULL, `status` (`active` / `complete` / `escalated` / `abandoned`), `created_at`, `updated_at` |
+| `messages` | Append-only by convention | `id` BIGSERIAL PK, `conversation_id` FK (CASCADE), `owner_id` UUID NOT NULL, `role` (`user` / `assistant` / `system`), `content` TEXT, `token_usage` JSONB, `created_at` |
+| `triage_records` | One row per completed intake | `id` BIGSERIAL PK, `conversation_id` FK + **`UNIQUE`**, `owner_id` UUID NOT NULL, eight marker fields (`severity`, `category`, `suggested_owner`, `required_timeline`, `summary` ≤ 160 chars, `escalation_flag`, `confidentiality_level`, `anonymous`), `raw_marker` JSONB |
+
+### One-record-per-conversation invariant
+
+`triage_records.conversation_id` carries a database **`UNIQUE` constraint**. The "exactly one TRIAGE_RECORD per conversation" rule is enforced at the schema level, not by application logic — a duplicate insert raises `unique_violation` and surfaces as a programmer error.
+
+### `owner_id` discipline
+
+Every Pantry read filters by `owner_id`; every write carries it. The single-user demo hardcodes `req.user.id = '00000000-0000-0000-0000-000000000001'` in the identity stub at `src/backend/app.js`. The shape survives unchanged when real identity (JWT, etc.) lands; auth becomes a substitution, not a rewrite. (See gold vision §10 items 10–11.)
+
+### `schema.sql` vs `migrations/`
+
+The DDL you run today is `src/db/schema.sql`. `src/db/migrations/001-initial.sql` is byte-for-byte identical and exists as the seed for future migration tooling. The two files are kept in sync by hand for now; production-grade migration management is taught in *Implementing Standards for LLM Apps*.
+
 ## License
 
 Apache-2.0.
