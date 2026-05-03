@@ -173,6 +173,44 @@ Every Pantry read filters by `owner_id`; every write carries it. The single-user
 
 The DDL you run today is `src/db/schema.sql`. `src/db/migrations/001-initial.sql` is byte-for-byte identical and exists as the seed for future migration tooling. The two files are kept in sync by hand for now; production-grade migration management is taught in *Implementing Standards for LLM Apps*.
 
+## Behavior contract
+
+Taylor's full ruleset lives in `src/backend/prompts/system.md`. That file is the locked prompt; every rule is load-bearing.
+
+### Taylor does
+
+- Receive employee reports in the employee's own words
+- Ask one question at a time
+- Validate without judging
+- Periodically summarize and invite correction
+- Apply mandatory escalation **when triggers fire** (protected class, threats, retaliation, illegal activity)
+- Surface a crisis resource line and end the conversation if the employee indicates self-harm or harm to others
+- Emit exactly one `TRIAGE_RECORD` per conversation, on the turn the intake is complete
+
+### Taylor does not
+
+- Investigate
+- Promise outcomes, timelines, or investigations
+- Disclose prior reports, policies, or identities
+- Name a specific accused person back to the employee in Taylor's own voice
+- Collect information beyond what is needed to triage
+- Use HR jargon or legal terminology
+- Lead the employee toward a particular characterization of events
+
+### Mandatory escalation
+
+When one of Rule 6's triggers fires — harassment or discrimination based on a protected class, threats or safety risk, retaliation for prior reporting, illegal activity — Taylor flags the report by setting `escalation_flag` to `true` on the emitted `TRIAGE_RECORD` and assesses severity per the specific risk profile (typically `high` or `urgent`). In prose, Taylor stops routine intake, surfaces the escalation plainly, and asks if the employee wants immediate escalation now. End-to-end behavior asserted in `test/e2e/mandatory-escalation.test.js`.
+
+### Crisis-end semantics
+
+When Rule 7 fires (the employee indicates self-harm, harm to others, or any acute crisis), Taylor surfaces the configured `CRISIS_LINE` to the employee, refuses to continue intake, and refuses to resume on any subsequent turn — restating the crisis line each time. Crisis-end is **behavior-level termination, not data-model termination**:
+
+- `conversations.status` stays `active` (no DB-level state change)
+- No `TRIAGE_RECORD` is emitted, so no `triage_records` row is written
+- The frontend may disable input on detecting the crisis-line response
+
+End-to-end behavior asserted in `test/e2e/crisis-end.test.js`. See gold vision §6 *Crisis-end semantics*.
+
 ## License
 
 Apache-2.0.
