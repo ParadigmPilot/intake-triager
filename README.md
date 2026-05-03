@@ -34,6 +34,75 @@ The product implements the Restaurant pattern from `Every_LLM_App_Is_a_Restauran
 | Cooking | `POST /v1/messages` — one inference turn, non-streaming |
 | **The Triager** *(composite role — central to this product)* | **Taylor (the Front of House Persona) executing on the Chef (Claude).** Not a separate code module — the runtime collaboration of the persona and the model. |
 
+## Pinned stack
+
+- Node.js 20+ with Express
+- PostgreSQL 15+
+- React 18 with Vite
+- `@anthropic-ai/sdk` — non-streaming `messages.create`
+- Default model: `claude-sonnet-4-20250514` (override via `MODEL` env var)
+
+### Required dependencies
+
+| Layer | Packages |
+| --- | --- |
+| Backend runtime | `express`, `pg`, `cors`, `dotenv`, `@anthropic-ai/sdk` |
+| Frontend runtime | `react`, `react-dom` |
+| Frontend build | `vite`, `@vitejs/plugin-react` |
+| Test | `vitest` |
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 20 or newer
+- PostgreSQL 15 or newer (`gen_random_uuid()` is built into PG 13+)
+- An Anthropic API key
+
+### Install
+
+```sh
+git clone https://github.com/ParadigmPilot/intake-triager.git
+cd intake-triager
+npm install
+```
+
+### Configure
+
+```sh
+cp .env.example .env
+# Edit .env: ANTHROPIC_API_KEY, DATABASE_URL, ORG_NAME, CRISIS_LINE at minimum.
+```
+
+See [Configuration](#configuration) for every key.
+
+### Bootstrap the database
+
+```sh
+psql "$DATABASE_URL" -f src/db/schema.sql
+```
+
+The same DDL exists at `src/db/migrations/001-initial.sql` (byte-for-byte identical). The `migrations/` directory is the seed for future migration tooling; today, only `schema.sql` is run. See [Database](#database).
+
+### Run dev
+
+```sh
+npm run dev   # starts the backend on PORT (default 3000) and Vite on :5173 concurrently
+```
+
+Open http://localhost:5173.
+
+### Run tests
+
+```sh
+npm test          # unit suite — 9 files, 80 tests, no external services
+npm run test:e2e  # E2E suite — drives Taylor through three rule paths against
+                  # a real Anthropic API and an isolated test DB.
+                  # Requires .env.test configured (template: .env.test.example).
+```
+
+The test runner is [Vitest](https://vitest.dev/). The E2E suite runs under a separate config (`vitest.e2e.config.js`); see `test/e2e/` for path tests and helpers.
+
 ## License
 
 Apache-2.0.
