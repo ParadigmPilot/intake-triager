@@ -103,6 +103,52 @@ npm run test:e2e  # E2E suite — drives Taylor through three rule paths against
 
 The test runner is [Vitest](https://vitest.dev/). The E2E suite runs under a separate config (`vitest.e2e.config.js`); see `test/e2e/` for path tests and helpers.
 
+## HTTP contract — `POST /converse`
+
+The backend exposes one external route. The Runner calls only this route.
+
+### Request
+
+```json
+{
+  "content": "string (required, ≤ 8000 chars)",
+  "conversation_id": "UUID (optional — omit on first turn)"
+}
+```
+
+`Content-Type` must be `application/json`. The handler explicitly **rejects `multipart/form-data`** with a 400 — the conversation surface is text only and accepts no binary attachments. (See `src/backend/security/input-validation.js`.) This is a defensive rejection of binary uploads at the door, not an attachment-size cap.
+
+### Response (success)
+
+```json
+{
+  "conversation_id": "UUID",
+  "reply": { "role": "assistant", "content": "string" },
+  "status": "active | complete | escalated"
+}
+```
+
+### Status codes
+
+| Code | Meaning |
+| --- | --- |
+| `200` | Successful turn. The body's `status` field tells the client what happened — turn continues, conversation completed, or conversation escalated. |
+| `400` | Validation failure (`error.code: "VALIDATION_FAILED"`) — bad content-type, length cap, missing field, or malformed JSON. |
+| `429` | Rate limit (`RATE_LIMITED`) or per-conversation token ceiling (`TOKEN_CEILING_EXCEEDED`). |
+| `500` | Unexpected server error (`INTERNAL_ERROR`). |
+
+### Error shape
+
+```json
+{ "error": { "code": "STABLE_IDENTIFIER", "message": "patron-safe message" } }
+```
+
+`error.message` is generic and never carries raw AI output, stack traces, or schema detail. `error.code` is stable for client branching.
+
+### Conversation-id flow
+
+The first turn omits `conversation_id`; the handler mints a new UUID, inserts a row in `conversations` with `status='active'`, and returns the new id. Subsequent turns pass back the `conversation_id` from the prior response. End-to-end multi-turn flow asserted in `test/e2e/standard-intake.test.js`.
+
 ## License
 
 Apache-2.0.
