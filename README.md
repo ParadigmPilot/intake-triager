@@ -211,6 +211,66 @@ When Rule 7 fires (the employee indicates self-harm, harm to others, or any acut
 
 End-to-end behavior asserted in `test/e2e/crisis-end.test.js`. See gold vision §6 *Crisis-end semantics*.
 
+## Public API surface
+
+Internal modules expose narrow surfaces; these are the canonical signatures shipped at this commit.
+
+### Pantry — PostgreSQL access (`src/backend/pantry.js`)
+
+Every public method takes a final optional `tx` parameter; when supplied (from a `transaction(...)` block), the call routes through the transaction client, otherwise through the connection pool. Every read or write that touches user-scoped data filters by `owner_id`. `query` is the lone exception — locked to migration code, no `tx`, no `owner_id`.
+
+| Method | Signature |
+| --- | --- |
+| `insertConversation` | `(owner_id, tx?) → {id: UUID}` |
+| `appendMessage` | `({conversation_id, role, content, token_usage, owner_id}, tx?)` |
+| `loadMessages` | `(conversation_id, owner_id, tx?) → [{id, role, content, token_usage, created_at}]` |
+| `insertTriageRecord` | `(record, tx?)` — raw INSERT (not upsert); duplicate raises `unique_violation` |
+| `setConversationStatus` | `(conversation_id, status, owner_id, tx?)` |
+| `sumConversationOutputTokens` | `(conversation_id, owner_id, tx?) → number` |
+| `transaction` | `(async (tx) => …) → callback's return value`; auto-commits on resolve, rolls back on throw |
+| `query` | `(sql, params)` — migration code only |
+
+### Briefing — prompt assembly (`src/backend/prompt-assembler.js`)
+
+| Method | Signature |
+| --- | --- |
+| `assemblePrompt` | `({placeholders, history}) → [{role, content}]` |
+
+Reads `src/backend/prompts/system.md` once at module load (process-lifetime cache), substitutes `{{NAMES}}` against `placeholders`, prepends as the system message, appends `history`, returns the array passed to the SDK.
+
+### Chef — SDK bridge (`src/backend/chef.js`)
+
+| Method | Signature |
+| --- | --- |
+| `cook` | `(briefing) → {text, usage}` |
+
+Single-call wrapper around `@anthropic-ai/sdk` `messages.create`. Non-streaming. Uses the configured `MODEL` value.
+
+### Expediter — parser + dispatcher (`src/backend/expediter.js`)
+
+| Method | Signature |
+| --- | --- |
+| `parse` | `(reply) → {prose, markers}` — strips marker comments from prose, returns parsed markers `[{type, payload}]` |
+| `dispatch` | `(markers, ctx)` — routes each marker to its registered handler; `ctx` is `{conversation_id, owner_id, tx}` |
+
+## Configuration
+
+The repo ships `.env.example` with **nine keys**. Production values override per environment.
+
+| Variable | Default | Purpose | Read by |
+| --- | --- | --- | --- |
+| `ANTHROPIC_API_KEY` | (placeholder — required) | Authenticates calls to api.anthropic.com | `src/backend/chef.js` (via SDK) |
+| `DATABASE_URL` | `postgres://user:pass@localhost:5432/intake_triager` | Postgres connection string | `src/backend/pantry.js` |
+| `MODEL` | `claude-sonnet-4-20250514` | Claude model used by the Chef | `src/backend/chef.js` |
+| `PORT` | `3000` | Backend listen port | `src/backend/server.js` |
+| `RATE_LIMIT_PER_IP_PER_MINUTE` | `20` | Per-IP request cap on `/converse` | `src/backend/security/rate-limit.js` |
+| `CONVERSATION_TOKEN_CEILING` | `200000` | Cumulative output-token cap per conversation | `src/backend/security/cost-ceiling.js` |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated allowed origins | `src/backend/security/cors.js` |
+| `ORG_NAME` | (set per deployment) | Substituted into `{{ORG_NAME}}` in `system.md` | `src/backend/converse.js` |
+| `CRISIS_LINE` | (set per deployment) | Substituted into `{{CRISIS_LINE}}` in `system.md` | `src/backend/converse.js` |
+
+The frontend (Vite) runs on `:5173`. The backend listens on `PORT`.
+
 ## License
 
 Apache-2.0.
