@@ -51,6 +51,12 @@ Each entry below names a **Reconciliation target**: the file(s) and section(s) t
 | D15   | MINOR    | Phase 8 | Cycle 304.2 | Open       | Phase 8 infrastructure adds files beyond gold vision §4 Repo structure       |
 | D17   | MINOR    | Phase 8 | Cycle 304.4 | Reconciled | `.env.test.example` template missing `ORG_NAME` and `CRISIS_LINE`            |
 | D18   | MINOR    | Phase 6 | Cycle 304.4 | Open       | `converse.js` propagates `undefined` from env vars; no boot-time validation  |
+| D19   | MINOR    | Phase 9.B | Cycle 304.7 | Open       | Canon files reference deck by filename without path prefix                       |
+| D20   | MAJOR    | Phase 9.B | Cycle 304.7 | Open       | PPTX repack passing zipfile/lxml/python-pptx does not guarantee Office content validation |
+| D21   | MINOR    | Phase 9.B | Cycle 304.7 | Open       | Cycle 304.6 inventory misread Slide 4 as single-column; canon-vs-deck audits must inspect shape topology |
+| D22   | MINOR    | Phase 9.B | Cycle 304.7 | Open       | WO B.1 structural gate spec under-counted ZIP members by one (missed `_rels` file) |
+| D23   | MAJOR    | Phase 9.B | Cycle 304.8 | Open       | Redux dispatches must explicitly re-list non-struck deliverables                  |
+| D24   | MINOR    | Phase 9.B | Cycle 304.8 | Open       | Slide 47 `appendMessage` retains `conversation_id: conversationId` camelCase shadow |
 
 ---
 
@@ -623,4 +629,157 @@ Owner ruling needed during Phase 9.D. Either (or both) disposition belongs in `s
 
 ---
 
-_Last updated: 2026-05-02 — Cycle 304, Session 304.4 (D17 + D18 appended)._
+### D19 — Canon files reference deck by filename without path prefix
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 9.B (Implementing deck reconciliation)         |
+| Discovered  | Cycle 304, Session 304.7 (WO-304.6.b Stage 1, D.2 deliverable verification) |
+| Status      | Open                                                 |
+
+**Discovery.** WO-304.6.b §D.2 ("path-reference updates in canon for the deck-relocation side effect") was authored in Session 304.6 against the assumption that deck-path moves require canon updates. On Stage 1 execution in Session 304.7, D.2 verified as a no-op: the three target canon files (`intake-triager-build-plan.md`, `intake-triager-gold-vision.md` Appendix B, `cycle-304-baseline.md`) reference the deck by filename only (`Implementing_the_Restaurant.pptx`), never by path prefix. The 304.6 deck relocation from `products/restaurant-pattern-training/` to a sibling `training-decks` repo's `restaurant-pattern/` folder did not propagate to canon because there was no path prefix to update.
+
+**Concrete exposure.** None. The convention itself isn't a defect — filename-only references are repo-relocation-resilient, which is desirable. The discovery is that the convention is **implicit**, not declared. Future deck moves work the same way by accident, not by design. A future contributor who adds a path-prefixed reference would not be flagged by any convention check.
+
+**Evidence.** Session 304.7 checkpoint, Completed Items: "D.2 (path-reference updates: confirmed no-op — three target files reference deck filenames without path prefixes)." Session 304.6 checkpoint, WO-304.6.b §Files to Touch table named the three files explicitly: `intake-triager-build-plan.md`, `intake-triager-gold-vision.md`, `cycle-304-baseline.md`.
+
+**Workaround applied.** None — D.2 confirmed no-op at execution time.
+
+**Reconciliation target.** Owner ruling needed during Phase 9.D: (a) ratify the filename-only convention as a canon norm (e.g., one-line note in gold vision §13 or in build-plan governance section), or (b) require path-prefixed references going forward (more brittle on relocation; not recommended). Option (a) closes the gap with one editorial sentence. Phase 9.D in Cycle 304.
+
+**Status.** Open.
+
+---
+
+### D20 — PPTX repack passing zipfile/lxml/python-pptx does not guarantee Office content validation
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MAJOR                                                |
+| Phase       | Phase 9.B (Implementing deck reconciliation)         |
+| Discovered  | Cycle 304, Session 304.7 (WO-304.6.b Stage 3 first attempt) |
+| Status      | Open                                                 |
+
+**Discovery.** WO-304.6.b Stage 3 first-attempt repack of `Implementing_the_Restaurant.pptx` passed every available XML validator — `zipfile.testzip()`, `xml.etree.ElementTree.parse`, `lxml.etree.parse`, and `python-pptx`'s default open path — yet was rejected by PowerPoint's content validator at file-open time with a "PowerPoint found a problem with content" repair dialog. The defect was an OOXML-semantic violation (an empty `<p:txBody>` element on Slide 4's RightColumn shape, post-A.1 byte-range reorder) that none of the four upstream validators detect. Sam clicked Cancel preserving the broken binary; bisect-by-deliverable localized the failure to A.1.
+
+**Concrete exposure.** Without an OOXML-semantic gate, every PPTX-touching WO since Cycle 301 has been one A.1-class defect away from a silent corruption that surfaces only on Sam's local PowerPoint open. The Cycle 301.8 deck work (11 new slides) and Cycle 304.5/304.6 mechanical edits passed by luck — none of those changes happened to leave a `<p:txBody>` empty. The validator chain in widespread use *cannot* catch this class of defect; only PowerPoint can. Build velocity in any future PPTX cycle is one round-trip per defect (Sam open-test → fail → bisect → repair) without a pre-PowerPoint gate.
+
+**Evidence.** Session 304.7 checkpoint, Forensic triage: "slide 4 is a two-shape layout: LeftColumn (id=5) carries CONTEXT through MARKER PROTOCOL, RightColumn (id=6) carries RULES; v1.0's byte-range reorder dragged RULES paragraphs into LeftColumn and emptied RightColumn's `<p:txBody>` (an OOXML-semantic violation invisible to lxml/python-pptx/`zipfile.testzip()`)."
+
+**Workaround applied.** OOXML-semantic gate added after every deliverable in Stage 3 redux and all subsequent Phase 9.B + 9.C stages. The gate verifies every modified slide's `<p:txBody>` element contains at least one `<a:p>` child — the specific OOXML-semantic constraint A.1's defect violated. The gate is implemented inline in the WO Execution Block's per-stage verification step (V3 in WO-304.8.a; equivalent positions in WO-304.6.b Stages 3–6). All subsequent stages (Stage 3 redux through Stage 6 plus all of WO-304.8.a) passed both the gate and Sam's PowerPoint open-test on first attempt.
+
+**Reconciliation target.** STD-13 process amendment in Phase 9.D, Cycle 304. Two complementary candidates:
+
+1. **Mandatory pre-flight rule for PPTX-touching WOs.** Add a clause to STD-13 §Verification (or §10 Edits-pattern verification rules) requiring an OOXML-semantic gate on every PPTX edit deliverable. The rule names `<p:txBody>`-non-empty as the minimum-viable check; future expansion may add `<p:sp>` reference integrity, slide-relationship file count, etc.
+2. **Reusable gate script as a hopper-tooling artifact.** Lift the inline gate into a standalone PowerShell or Python script (e.g., `tools/ooxml-semantic-gate.ps1`) that PPTX-touching WOs invoke from their Verification block. Centralizes maintenance; reduces per-WO authoring overhead.
+
+Owner ruling needed: prefer (1) alone, (2) alone, or both. Both is the most robust answer (gate spec lives in STD-13; implementation lives in tooling).
+
+**Status.** Open.
+
+---
+
+### D21 — Cycle 304.6 inventory misread Slide 4 as single-column; canon-vs-deck audits must inspect shape topology
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 9.B (Implementing deck reconciliation)         |
+| Discovered  | Cycle 304, Session 304.7 (forensic triage of A.1 failure) |
+| Status      | Open                                                 |
+
+**Discovery.** The Phase 9.B inventory drafted in Session 304.6 (`phase-9b-implementing-deck-inventory.md`) read Slide 4 as a single-column document-flow layout. WO-304.6.b's A.1 deliverable was authored against that mental model: a byte-range reorder that assumed all paragraphs lived in one `<p:txBody>`. Forensic triage of the Stage 3 failure revealed Slide 4 is actually a two-shape layout: LeftColumn (id=5) carries the CONTEXT-through-MARKER-PROTOCOL paragraphs; RightColumn (id=6) carries the RULES paragraphs. A.1's reorder dragged content across the shape boundary, emptying RightColumn's `<p:txBody>` and triggering D20's content-validator failure.
+
+**Concrete exposure.** A.1 was struck in WO-304.6.b v1.1; Slide 4 was not redesigned (canon §6 governs prompt-file section order, not slide visual layout — Sole Benefactor decision). One deliverable lost; one round-trip burned on bisect and forensic triage. The same inventory-practice gap applies to any future deck reconciliation that walks slides as text streams without inspecting `<p:sp>` topology.
+
+**Evidence.** Session 304.7 checkpoint, Forensic triage entry (verbatim): "slide 4 is a two-shape layout: LeftColumn (id=5) carries CONTEXT through MARKER PROTOCOL, RightColumn (id=6) carries RULES; v1.0's byte-range reorder dragged RULES paragraphs into LeftColumn and emptied RightColumn's `<p:txBody>`." The 304.6 inventory was authored by reading the deck's text content via the PPTX skill's text-extraction pipeline, which flattens shape topology by design.
+
+**Workaround applied.** A.1 struck in WO-304.6.b v1.1 (commit `4b85cb0a`). Sole Benefactor decision recorded: canon §6 binds prompt-file content section order; visual layout is authorial choice. No redesign required.
+
+**Reconciliation target.** Process amendment to deck-reconciliation inventory practice in Phase 9.D, Cycle 304. Candidates:
+
+1. **Inventory-practice rule.** Update build-plan §Phase 9.B (and any future deck-reconciliation phase template) to require a topology-level pass on every slide named in the inventory: enumerate shapes, note multi-shape layouts, flag any slide where text-flow assumptions could cross shape boundaries.
+2. **Lift to a reusable inventory-authoring checklist.** Same content as (1) but as a hopper-tooling checklist artifact, callable from any deck-reconciliation phase.
+
+Aligns with D20 (process amendment scope). Phase 9.D in Cycle 304.
+
+**Status.** Open.
+
+---
+
+### D22 — WO B.1 structural gate spec under-counted ZIP members by one (missed `_rels` file)
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 9.B (Implementing deck reconciliation)         |
+| Discovered  | Cycle 304, Session 304.7 (WO-304.6.b Stage 5 / B.1 execution) |
+| Status      | Open                                                 |
+
+**Discovery.** WO-304.6.b §B.1 inserted a new slide ("Conversation status transitions") at display position 32. The WO's structural-gate spec for B.1 enumerated the new ZIP members the PPTX repack would add and prescribed the post-repack member count as a verification check. The spec under-counted by one member: it named the new `ppt/slides/slideNN.xml` file but omitted the corresponding `ppt/slides/_rels/slideNN.xml.rels` file that OOXML requires for every slide.
+
+**Concrete exposure.** Stage 5 visual QA passed because the executor (Claude Code) created the `_rels` file as part of standard OOXML hygiene — it's a structural prerequisite for the slide to be loadable, and any sane PPTX-edit pipeline emits it whether or not the WO names it. The defect lives in the WO authoring discipline, not the executed binary. A stricter executor (or one operating closer to the WO spec literal) would have under-emitted the `_rels` file and produced a non-loading deck.
+
+**Evidence.** Session 304.7 checkpoint, Completed Items: "Stage 5 / B.1 executed and visually QA'd — new slide inserted at display position 32 ('Conversation status transitions'); seven pre-flight investigations recorded; six structural gates pass; OOXML-semantic gate clean; flanking slides at display 31 and 33 confirmed intact." The "six structural gates" count corresponds to the WO's spec; one additional gate (the `_rels` member existence check) would have made it seven.
+
+**Workaround applied.** None — Stage 5 passed visual QA because the executor handled the `_rels` file outside the spec.
+
+**Reconciliation target.** WO-authoring practice for new-slide-insertion (B-family) deliverables. Update STD-13 (or a deck-reconciliation WO authoring checklist) to require, for every new slide inserted: enumeration of both `slideNN.xml` and `slideNN.xml.rels` as expected ZIP members, plus any updates to `[Content_Types].xml` and `ppt/_rels/presentation.xml.rels`. Aligns with D20 / D21 process-amendment scope. Phase 9.D in Cycle 304.
+
+**Status.** Open.
+
+---
+
+### D23 — Redux dispatches must explicitly re-list non-struck deliverables
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MAJOR                                                |
+| Phase       | Phase 9.B (Implementing deck reconciliation)         |
+| Discovered  | Cycle 304, Session 304.8 (A.17 verification of post-Stage-5 deck) |
+| Status      | Open                                                 |
+
+**Discovery.** When WO-304.6.b v1.1 struck A.1 (per D21), the Stage 3 redux dispatch list was reconstructed around the strike. A.5 (Slide 13 prose update) — which had been listed before A.1 in the original Stage 3 dispatch — was collateral-killed unobserved during the reconstruction. No participant detected A.5's absence at dispatch, and no automated check flagged the omission. Stages 1–5 closed believing all non-struck Stage 3 deliverables had landed. A.17 verification in Session 304.8 (the safety-net sweep deferred during 304.7) surfaced Slide 13 in pre-A.5 state — appendMessage signature stale, prose unchanged. Required a Stage 6 corrective dispatch (WO-304.6.b v1.2 with A.5 reinstated and A.22 added).
+
+**Concrete exposure.** One deliverable silently dropped from a multi-stage dispatch sequence; one extra round-trip burned on Stage 6 corrective + verification. The failure mode applies to every redux dispatch in any STD-13 §10 Deliverables-pattern WO: when an Edit/Deliverable is struck in a WO version bump and the redux dispatch list is rebuilt, the rebuild relies on cumulative-baseline-plus-new-deliverables logic without an explicit checklist of what should still be present from prior versions. A.5's loss is the smoking-gun instance; future redux dispatches with this pattern remain exposed.
+
+**Evidence.** Session 304.8 checkpoint, Completed Items (verbatim): "**A.17 verification first run** against post-Stage-5 deck — independent grep sweep across A.17 target slides... Surfaced two gaps: Slide 13 in pre-A.5 state (`assembler.build` / `chef.complete` / `appendMessage(req.body.conversationId, prose)` still present); Slide 36 two `appendMessage` calls missing `tx` and `owner_id`." And Cross-reference review entry: "confirmed A.5 absent from Stage 1, 2, 3-redux, 4, 5 dispatch listings. Mechanism: Stage 3 redux deliverable list reconstructed around A.1 strike collateral-killed A.5; absence unobserved because A.17 (the safety-net sweep) was deferred."
+
+**Workaround applied.** WO-304.6.b v1.2 amendment drafted (commit `65a88212` on hopper main): A.5 reinstated for Stage 6 dispatch with status note in deliverable header; A.22 added as new deliverable for the related Slide 36 backfill (per D17/A.18 narrow-scoping); Stage 6 corrective framing in §Design Decision; V6 verification block (A.5 grep + A.22 grep + OOXML-semantic gate); §Success Criteria amended. Stage 6 dispatched and verified clean; A.17 re-run pass.
+
+**Reconciliation target.** STD-13 process amendment in Phase 9.D, Cycle 304. Two candidate clauses (likely both):
+
+1. **Redux-dispatch checklist rule.** Add to STD-13 §10 (or §Verification family): every redux dispatch in a Deliverables-pattern WO must explicitly enumerate **all non-struck deliverables** still in scope, not rely on cumulative-baseline reasoning. The dispatch prompt itself becomes the checklist.
+2. **Strike-handling rule.** When a WO version bump strikes any deliverable, the version-bump entry in §Change History must include both (a) the struck deliverable's ID and (b) the still-in-scope deliverable IDs that flank it (for ordering reconstruction).
+
+Both close the same hole from different directions. Owner ruling needed; recommend ratifying both since they are non-overlapping and cheap.
+
+**Status.** Open.
+
+---
+
+### D24 — Slide 47 `appendMessage` retains `conversation_id: conversationId` camelCase shadow
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 9.B (Implementing deck reconciliation, closing audit) |
+| Discovered  | Cycle 304, Session 304.8 (A.17 re-run pass)          |
+| Status      | Open                                                 |
+
+**Discovery.** During the A.17 re-run pass against the post-Stage-6 Implementing deck binary, Slide 47 (display position 47; original Slide 46) was confirmed to retain a `conversation_id: conversationId` camelCase-shadow assignment in its `appendMessage` call. The shadow is a JavaScript pattern where an object literal property named in snake_case is assigned a value from a same-named camelCase variable: `appendMessage({ conversation_id: conversationId, ... })`. WO-304.6.b §A.21 acceptance was scoped to `tx` + `owner_id` only and was met as written; Slide 47's body fields were not in §A.21's surface. WO-304.6.b §A.22 (added in v1.2 per D23 corrective) explicitly normalized the same shadow on Slide 36, removing it in favor of the snake_case identifier alone. Slide 47 stayed inconsistent with the cleaned-up Slide 36.
+
+**Concrete exposure.** Two slides in the same deck show the same canon API (`appendMessage`) with stylistically inconsistent code: Slide 36 uses the clean form (`conversation_id` identifier alone); Slide 47 still uses the camelCase shadow. Pedagogically distracting; a reader comparing the two slides would correctly notice the inconsistency and incorrectly infer it carries semantic weight. Build-impact zero; canon-impact zero.
+
+**Evidence.** Session 304.8 checkpoint, Completed Items (verbatim): "**D24-candidate logged** during A.17 re-run — Slide 47 (display position 47; original Slide 46) `appendMessage` retains `conversation_id: conversationId` camelCase shadow; A.21 acceptance was scoped to `tx` + `owner_id` only and was met. A.22 explicitly normalized the same shadow on Slide 36; consistency drift between two slides showing the same canon API. Deferred to Phase 9.D batch as MINOR."
+
+**Workaround applied.** None. The drift was logged as Phase 9.D candidate at the moment of detection; visual QA on Slide 47 had passed against A.21's stated acceptance (which did not cover the body-fields surface).
+
+**Reconciliation target.** One-line edit on Slide 47's `appendMessage` call in any Phase 9.D corrective WO. Either (a) folded into WO-304.9.a as a small additional Edit on the deck binary (requires a Phase 9.D editorial branch on `training-decks`), or (b) deferred to Cycle 305+ as a standalone follow-up touch (the deck has just been merged to `training-decks/main`; opening a single-edit PR here is acceptable but not urgent). Owner ruling needed during Phase 9.D triage.
+
+**Status.** Open.
+
+---
+
+_Last updated: 2026-05-04 — Cycle 304, Session 304.9 (D19–D24 appended for Phase 9.D triage)._
