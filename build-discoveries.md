@@ -19,6 +19,7 @@ reconciliation.
 
 - **Open** — discovery logged; no reconciliation action taken yet.
 - **Reconciled** — Phase 9.D (or earlier) applied the canon update; entry kept for history.
+- **Ratified** — Phase 9.D reviewed the divergence and ratified the existing state as canon-aligned-by-absence; no edit required; entry kept for history.
 - **Superseded** — overtaken by a later canon change that made the original divergence moot; entry kept for history.
 
 ## Reconciliation flow (per gold vision §13)
@@ -33,31 +34,32 @@ Each entry below names a **Reconciliation target**: the file(s) and section(s) t
 
 | ID    | Severity | Phase   | Discovered  | Status | Title                                                                          |
 | ----- | -------- | ------- | ----------- | ------ | ------------------------------------------------------------------------------ |
-| D1    | MINOR    | Phase 2 | Cycle 303.3 | Open   | WO-303.3a smoke-test ESM `import` uses bare Windows path                       |
-| D2    | MINOR    | Phase 2 | Cycle 303.3 | Open   | WO-303.3a Success Criteria says "ten checks"; smoke test runs eleven           |
-| D3    | MINOR    | Phase 3 | Cycle 303.3 | Open   | Gold vision silent on per-call `max_tokens` for Chef                           |
-| D4    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §4 Repo structure missing `security/cors.js` and `cost-ceiling.js` |
-| D5    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §11 Non-goals silent on Phase 5 unit-test files                    |
-| D6    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §10 silent on `MAX_CONTENT_LENGTH`                                 |
-| D7    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §10 item 5 silent on prompt-injection wrapper syntax               |
-| D8    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Cost ceiling lives in `cost-ceiling.js`, not `rate-limit.js`                   |
-| D9    | MINOR    | Phase 5 | Cycle 303.6 | Open   | Gold vision §4 Pantry public API table missing `sumConversationOutputTokens`   |
+| D1    | MINOR    | Phase 2 | Cycle 303.3 | Ratified   | WO-303.3a smoke-test ESM `import` uses bare Windows path                       |
+| D2    | MINOR    | Phase 2 | Cycle 303.3 | Ratified   | WO-303.3a Success Criteria says "ten checks"; smoke test runs eleven           |
+| D3    | MINOR    | Phase 3 | Cycle 303.3 | Reconciled | Gold vision silent on per-call `max_tokens` for Chef                           |
+| D4    | MINOR    | Phase 5 | Cycle 303.6 | Reconciled | Gold vision §4 Repo structure missing `security/cors.js` and `cost-ceiling.js` |
+| D5    | MINOR    | Phase 5 | Cycle 303.6 | Reconciled | Gold vision §11 Non-goals silent on Phase 5 unit-test files                    |
+| D6    | MINOR    | Phase 5 | Cycle 303.6 | Reconciled | Gold vision §10 silent on `MAX_CONTENT_LENGTH`                                 |
+| D7    | MINOR    | Phase 5 | Cycle 303.6 | Reconciled | Gold vision §10 item 5 silent on prompt-injection wrapper syntax               |
+| D8    | MINOR    | Phase 5 | Cycle 303.6 | Reconciled | Cost ceiling lives in `cost-ceiling.js`, not `rate-limit.js`                   |
+| D9    | MINOR    | Phase 5 | Cycle 303.6 | Reconciled | Gold vision §4 Pantry public API table missing `sumConversationOutputTokens`   |
 | D10   | MINOR    | Phase 6 | Cycle 303.7 | Reconciled | Phase 0 `/health` stub removed by Phase 6 (canon-deviation self-healed)   |
-| D11   | MINOR    | Phase 6 | Cycle 303.7 | Open   | Gold vision §11 Non-goals silent on `converse.test.js`                         |
+| D11   | MINOR    | Phase 6 | Cycle 303.7 | Reconciled | Gold vision §11 Non-goals silent on `converse.test.js`                         |
 | D12   | MINOR    | Phase 6 | Cycle 303.7 | Reconciled | `dotenv` declared in `package.json` but never imported                     |
 | D13   | MINOR    | Phase 7 | Cycle 303.8 | Reconciled | PR #9 squash-merged when merge criterion required `Create a merge commit`  |
 | D16   | MAJOR    | Phase 6 | Cycle 304.3 | Reconciled | Phase 6 shipped without gold vision §10 JSON one-line-per-event logging      |
-| D14   | MINOR    | Phase 8 | Cycle 304.2 | Open       | Path-test user prompts authored at WO draft time, not pre-existing in canon  |
-| D15   | MINOR    | Phase 8 | Cycle 304.2 | Open       | Phase 8 infrastructure adds files beyond gold vision §4 Repo structure       |
+| D14   | MINOR    | Phase 8 | Cycle 304.2 | Ratified   | Path-test user prompts authored at WO draft time, not pre-existing in canon  |
+| D15   | MINOR    | Phase 8 | Cycle 304.2 | Reconciled | Phase 8 infrastructure adds files beyond gold vision §4 Repo structure       |
 | D17   | MINOR    | Phase 8 | Cycle 304.4 | Reconciled | `.env.test.example` template missing `ORG_NAME` and `CRISIS_LINE`            |
-| D18   | MINOR    | Phase 6 | Cycle 304.4 | Open       | `converse.js` propagates `undefined` from env vars; no boot-time validation  |
-| D19   | MINOR    | Phase 9.B | Cycle 304.7 | Open       | Canon files reference deck by filename without path prefix                       |
-| D20   | MAJOR    | Phase 9.B | Cycle 304.7 | Open       | PPTX repack passing zipfile/lxml/python-pptx does not guarantee Office content validation |
-| D21   | MINOR    | Phase 9.B | Cycle 304.7 | Open       | Cycle 304.6 inventory misread Slide 4 as single-column; canon-vs-deck audits must inspect shape topology |
-| D22   | MINOR    | Phase 9.B | Cycle 304.7 | Open       | WO B.1 structural gate spec under-counted ZIP members by one (missed `_rels` file) |
-| D23   | MAJOR    | Phase 9.B | Cycle 304.8 | Open       | Redux dispatches must explicitly re-list non-struck deliverables                  |
+| D18   | MINOR    | Phase 6 | Cycle 304.4 | Reconciled | `converse.js` propagates `undefined` from env vars; no boot-time validation  |
+| D19   | MINOR    | Phase 9.B | Cycle 304.7 | Ratified   | Canon files reference deck by filename without path prefix                       |
+| D20   | MAJOR    | Phase 9.B | Cycle 304.7 | Reconciled | PPTX repack passing zipfile/lxml/python-pptx does not guarantee Office content validation |
+| D21   | MINOR    | Phase 9.B | Cycle 304.7 | Reconciled | Cycle 304.6 inventory misread Slide 4 as single-column; canon-vs-deck audits must inspect shape topology |
+| D22   | MINOR    | Phase 9.B | Cycle 304.7 | Reconciled | WO B.1 structural gate spec under-counted ZIP members by one (missed `_rels` file) |
+| D23   | MAJOR    | Phase 9.B | Cycle 304.8 | Reconciled | Redux dispatches must explicitly re-list non-struck deliverables                  |
 | D24   | MINOR    | Phase 9.B | Cycle 304.8 | Open       | Slide 47 `appendMessage` retains `conversation_id: conversationId` camelCase shadow |
 
+| D25   | MINOR    | Phase 9.D | Cycle 304.9 | Reconciled | STD-13 self-declared front-matter `path:` field stale (named non-existent `tier-0-operational/` directory) |
 ---
 
 ## Entries
@@ -69,7 +71,7 @@ Each entry below names a **Reconciliation target**: the file(s) and section(s) t
 | Severity    | MINOR                                                |
 | Phase       | Phase 2 (Pantry)                                     |
 | Discovered  | Cycle 303, Session 303.3 (Pantry smoke-test execution) |
-| Status      | Open                                                 |
+| Status      | Ratified                                                 |
 
 **Discovery.** The smoke-test script as authored in `wo-303.3a-pantry.md` §Verification → "Smoke-test script (verbatim)" uses a bare absolute Windows path in the ESM `import` statement:
 
@@ -109,7 +111,7 @@ Smoke test then passed all eleven checks. The committed `pantry.js` itself is un
 | Severity    | MINOR                                                |
 | Phase       | Phase 2 (Pantry)                                     |
 | Discovered  | Cycle 303, Session 303.3 (Pantry smoke-test execution) |
-| Status      | Open                                                 |
+| Status      | Ratified                                                 |
 
 **Discovery.** WO-303.3a §Success Criteria reads:
 
@@ -147,7 +149,7 @@ ALL CHECKS PASSED
 | Severity    | MINOR                                                |
 | Phase       | Phase 3 (Briefing & Chef)                            |
 | Discovered  | Cycle 303, Session 303.3 (WO-303.4b drafting)        |
-| Status      | Open                                                 |
+| Status      | Reconciled                                                 |
 
 **Discovery.** Gold vision §4 *Chef public API* and §10 *Configuration* prescribe `MODEL` (default `claude-sonnet-4-20250514`) but do not specify a `max_tokens` value for the SDK's `messages.create` call. The `@anthropic-ai/sdk` Messages API requires `max_tokens` as a non-optional parameter; canon doesn't say what value to use.
 
@@ -170,7 +172,7 @@ ALL CHECKS PASSED
 | Severity    | MINOR                                                  |
 | Phase       | Phase 5 (Security floor)                               |
 | Discovered  | Cycle 303, Session 303.6 (Phase 5 WO drafting)         |
-| Status      | Open                                                   |
+| Status      | Reconciled                                                   |
 
 **Discovery.** Gold vision §4 *Repo structure* lists three files under `src/backend/security/`: `rate-limit.js`, `input-validation.js`, `prompt-injection.js`. Phase 5 ships two additional files at the same depth: `cors.js` (per WO-303.6e) and `cost-ceiling.js` (per WO-303.6d, also covered by D8).
 
@@ -209,7 +211,7 @@ security/
 | Severity    | MINOR                                                  |
 | Phase       | Phase 5 (Security floor)                               |
 | Discovered  | Cycle 303, Session 303.6 (Phase 5 WO drafting)         |
-| Status      | Open                                                   |
+| Status      | Reconciled                                                   |
 
 **Discovery.** Gold vision §11 *Non-goals* names exactly three unit-test files in scope:
 
@@ -236,7 +238,7 @@ After Phase 5 merges, `test/` contains eight files; canon names three.
 | Severity    | MINOR                                                  |
 | Phase       | Phase 5 (Security floor)                               |
 | Discovered  | Cycle 303, Session 303.6 (WO-303.6a drafting)          |
-| Status      | Open                                                   |
+| Status      | Reconciled                                                   |
 
 **Discovery.** Gold vision §10 item 3 prescribes "input validation at the door — message length caps" but does not specify a value. §10 *Configuration* enumerates nine env keys; none govern content length. The middleware needs a defensible numeric cap to enforce.
 
@@ -259,7 +261,7 @@ After Phase 5 merges, `test/` contains eight files; canon names three.
 | Severity    | MINOR                                                  |
 | Phase       | Phase 5 (Security floor)                               |
 | Discovered  | Cycle 303, Session 303.6 (WO-303.6b drafting)          |
-| Status      | Open                                                   |
+| Status      | Reconciled                                                   |
 
 **Discovery.** Gold vision §10 item 5 prescribes "prompt-injection hygiene — user text isolated from system instructions" but does not specify the wrapper syntax (delimiters, neutralization rules, transport-vs-storage split) used to isolate user content within the message array sent to the Chef.
 
@@ -282,7 +284,7 @@ The phrase "user text isolated from system instructions" is the only constraint 
 | Severity    | MINOR                                                  |
 | Phase       | Phase 5 (Security floor)                               |
 | Discovered  | Cycle 303, Session 303.6 (WO-303.6c/6d drafting)       |
-| Status      | Open                                                   |
+| Status      | Reconciled                                                   |
 
 **Discovery.** Gold vision §10 item 7 prescribes "Rate limit on `/converse` — per-IP **and per-conversation**. File: `src/backend/security/rate-limit.js`." Build plan §Phase 5 deliverables list both per-IP rate limit and per-conversation cost ceiling under `rate-limit.js`. The Cycle 303.6 strategy ruling decomposed Phase 5 into five WOs (RULE-06), splitting per-conversation cost ceiling into a separate file `cost-ceiling.js`.
 
@@ -311,7 +313,7 @@ Item 8 names neither a file path nor a separate module — the canonical reading
 | Severity    | MINOR                                                  |
 | Phase       | Phase 5 (Security floor)                               |
 | Discovered  | Cycle 303, Session 303.6 (WO-303.6d drafting)          |
-| Status      | Open                                                   |
+| Status      | Reconciled                                                   |
 
 **Discovery.** Gold vision §4 *Pantry public API* declares "the Pantry exposes a small surface; everything else in `pantry.js` is internal." The accompanying table lists seven methods. Phase 5 added an eighth: `sumConversationOutputTokens(conversation_id, owner_id, tx)` for the cost-ceiling check. The new method was required because canon §4 also specifies that `pantry.query()` is "Migration code only; never called at request time" — `cost-ceiling.js` cannot reach around the public API to write its own SQL.
 
@@ -369,7 +371,7 @@ WO-303.1c declared the file as a placeholder explicitly: "full Express bootstrap
 | Severity    | MINOR                                                  |
 | Phase       | Phase 6 (The Pass)                                     |
 | Discovered  | Cycle 303, Session 303.7 (WO-303.7b drafting)          |
-| Status      | Open                                                   |
+| Status      | Reconciled                                                   |
 
 **Discovery.** Gold vision §11 *Non-goals* "In scope" paragraph names three unit-test files explicitly: `test/expediter.test.js`, `test/handlers.test.js`, `test/prompt-assembler.test.js`. Phase 6 ships an eighth Vitest suite — `test/converse.test.js` — covering the route-layer orchestrator's first-turn, continuation, cost-ceiling, transaction-rollback, and four documented error paths. The canon list does not include it. This is the same pattern previously logged as D5 (Phase 5 test files), now extended to the route-layer test for Phase 6.
 
@@ -492,7 +494,7 @@ Reconciled in-cycle by the recovery sequence above; the durable preventative fix
 | Severity    | MINOR                                                |
 | Phase       | Phase 8 (E2E verification)                           |
 | Discovered  | Cycle 304, Session 304.2 (WO-304.2.a drafting)       |
-| Status      | Open                                                 |
+| Status      | Ratified                                                 |
 
 **Discovery.** Phase 8 path tests require concrete user-side prompt scripts that drive Taylor through each rule path (standard intake, mandatory escalation, crisis-end). Canon does not specify these prompts: gold vision §6 names Taylor's behavior contract and §11 names the three rule paths; build plan §Phase 8 names success criteria; `system.md` defines Taylor's rules. None supply candidate user messages.
 
@@ -502,7 +504,7 @@ Reconciled in-cycle by the recovery sequence above; the durable preventative fix
 
 **Reconciliation target.** Phase 9.D (Cycle 304). Disposition decision: leave as build-layer (default — prompts are test data, not canon), or lift to a gold-vision Appendix C *Phase 8 test data* (canon-level — couples canon to a specific phrasing). Default disposition argues for build-layer; the path tests are pedagogical demonstrations of canon, not extensions of it.
 
-**Status.** Open.
+**Status.** Ratified (Phase 9.D — no canon edit required; existing state ratified as canon-aligned-by-absence). Phase 9.D triage (Session 304.9) ratified the build-layer disposition: path-test user prompts are test data, not canon. Lifting to a gold-vision Appendix C *Phase 8 test data* would couple canon to specific phrasing without pedagogical benefit.
 
 ---
 
@@ -513,7 +515,7 @@ Reconciled in-cycle by the recovery sequence above; the durable preventative fix
 | Severity    | MINOR                                                |
 | Phase       | Phase 8 (E2E verification)                           |
 | Discovered  | Cycle 304, Session 304.2 (WO-304.2.a drafting)       |
-| Status      | Open                                                 |
+| Status      | Reconciled                                                 |
 
 **Discovery.** Phase 8 E2E infrastructure (WO-304.1.a) and the Path 1 test (WO-304.2.a, with WO-304.2.b–c forthcoming) add files to the repo that are not enumerated in gold vision §4 *Repo structure*. The §4 prescribed tree omits these by virtue of being pre-Phase-8.
 
@@ -531,7 +533,7 @@ Pre-existing additions to the repo file tree beyond §4 are tracked separately: 
 
 **Reconciliation target.** Phase 9.D (Cycle 304). Single §4 *Repo structure* amendment in the v1.7 graduation pass that includes the Phase 8 additions (this entry) plus the pre-existing additions in D4, D5, D9, D11. The amended §4 then reads against the as-built repo without divergence.
 
-**Status.** Open.
+**Status.** Reconciled (Phase 9.D — WO-304.9.a, gold vision v1.7).
 
 ---
 
@@ -598,7 +600,7 @@ The `CRISIS_LINE` value is a sentinel chosen for grep-uniqueness: the `E2E-TEST-
 | Severity    | MINOR                                                |
 | Phase       | Phase 6 (The Pass — `/converse` handler)             |
 | Discovered  | Cycle 304, Session 304.4 (WO-304.2.c drafting)       |
-| Status      | Open                                                 |
+| Status      | Reconciled                                                 |
 
 **Discovery.** Distinct from D17: D17 closes the test-environment template gap; D18 covers the upstream code-level pattern that allowed the gap to stay invisible across Phases 6 and 7. `src/backend/converse.js` constructs the `placeholders` object inline at every turn:
 
@@ -625,7 +627,7 @@ When either env var is unset, the value is `undefined`; `prompt-assembler.js`'s 
 
 Owner ruling needed during Phase 9.D. Either (or both) disposition belongs in `system.md` `[CONTEXT]` block semantics: should an unset trusted-context placeholder fail boot, fall back, or both?
 
-**Status.** Open.
+**Status.** Reconciled (Phase 9.D — WO-304.9.a, gold vision v1.7). Note: canon edit lands in v1.7; code change (boot-time fail-fast in `server.js`) deferred to Cycle 305+ per Phase 9.D Sole Benefactor decision.
 
 ---
 
@@ -636,7 +638,7 @@ Owner ruling needed during Phase 9.D. Either (or both) disposition belongs in `s
 | Severity    | MINOR                                                |
 | Phase       | Phase 9.B (Implementing deck reconciliation)         |
 | Discovered  | Cycle 304, Session 304.7 (WO-304.6.b Stage 1, D.2 deliverable verification) |
-| Status      | Open                                                 |
+| Status      | Ratified                                                 |
 
 **Discovery.** WO-304.6.b §D.2 ("path-reference updates in canon for the deck-relocation side effect") was authored in Session 304.6 against the assumption that deck-path moves require canon updates. On Stage 1 execution in Session 304.7, D.2 verified as a no-op: the three target canon files (`intake-triager-build-plan.md`, `intake-triager-gold-vision.md` Appendix B, `cycle-304-baseline.md`) reference the deck by filename only (`Implementing_the_Restaurant.pptx`), never by path prefix. The 304.6 deck relocation from `products/restaurant-pattern-training/` to a sibling `training-decks` repo's `restaurant-pattern/` folder did not propagate to canon because there was no path prefix to update.
 
@@ -648,7 +650,7 @@ Owner ruling needed during Phase 9.D. Either (or both) disposition belongs in `s
 
 **Reconciliation target.** Owner ruling needed during Phase 9.D: (a) ratify the filename-only convention as a canon norm (e.g., one-line note in gold vision §13 or in build-plan governance section), or (b) require path-prefixed references going forward (more brittle on relocation; not recommended). Option (a) closes the gap with one editorial sentence. Phase 9.D in Cycle 304.
 
-**Status.** Open.
+**Status.** Ratified (Phase 9.D — no canon edit required; existing state ratified as canon-aligned-by-absence). Phase 9.D triage (Session 304.9) ratified the filename-only convention; no canon edit applied. Convention enforced itself in production during WO-304.9.a and WO-304.9.b execution (file paths in WO headers carried path prefixes; Claude Code resolved correct files via filename match).
 
 ---
 
@@ -659,7 +661,7 @@ Owner ruling needed during Phase 9.D. Either (or both) disposition belongs in `s
 | Severity    | MAJOR                                                |
 | Phase       | Phase 9.B (Implementing deck reconciliation)         |
 | Discovered  | Cycle 304, Session 304.7 (WO-304.6.b Stage 3 first attempt) |
-| Status      | Open                                                 |
+| Status      | Reconciled                                                 |
 
 **Discovery.** WO-304.6.b Stage 3 first-attempt repack of `Implementing_the_Restaurant.pptx` passed every available XML validator — `zipfile.testzip()`, `xml.etree.ElementTree.parse`, `lxml.etree.parse`, and `python-pptx`'s default open path — yet was rejected by PowerPoint's content validator at file-open time with a "PowerPoint found a problem with content" repair dialog. The defect was an OOXML-semantic violation (an empty `<p:txBody>` element on Slide 4's RightColumn shape, post-A.1 byte-range reorder) that none of the four upstream validators detect. Sam clicked Cancel preserving the broken binary; bisect-by-deliverable localized the failure to A.1.
 
@@ -676,7 +678,7 @@ Owner ruling needed during Phase 9.D. Either (or both) disposition belongs in `s
 
 Owner ruling needed: prefer (1) alone, (2) alone, or both. Both is the most robust answer (gate spec lives in STD-13; implementation lives in tooling).
 
-**Status.** Open.
+**Status.** Reconciled (Phase 9.D — WO-304.9.b, STD-13 v1.2). STD-13 RULE-10 added; tooling artifact `tools/ooxml-semantic-gate.ps1` created (commit `a27a69cc`).
 
 ---
 
@@ -687,7 +689,7 @@ Owner ruling needed: prefer (1) alone, (2) alone, or both. Both is the most robu
 | Severity    | MINOR                                                |
 | Phase       | Phase 9.B (Implementing deck reconciliation)         |
 | Discovered  | Cycle 304, Session 304.7 (forensic triage of A.1 failure) |
-| Status      | Open                                                 |
+| Status      | Reconciled                                                 |
 
 **Discovery.** The Phase 9.B inventory drafted in Session 304.6 (`phase-9b-implementing-deck-inventory.md`) read Slide 4 as a single-column document-flow layout. WO-304.6.b's A.1 deliverable was authored against that mental model: a byte-range reorder that assumed all paragraphs lived in one `<p:txBody>`. Forensic triage of the Stage 3 failure revealed Slide 4 is actually a two-shape layout: LeftColumn (id=5) carries the CONTEXT-through-MARKER-PROTOCOL paragraphs; RightColumn (id=6) carries the RULES paragraphs. A.1's reorder dragged content across the shape boundary, emptying RightColumn's `<p:txBody>` and triggering D20's content-validator failure.
 
@@ -704,7 +706,7 @@ Owner ruling needed: prefer (1) alone, (2) alone, or both. Both is the most robu
 
 Aligns with D20 (process amendment scope). Phase 9.D in Cycle 304.
 
-**Status.** Open.
+**Status.** Reconciled (Phase 9.D — WO-304.9.b, STD-13 v1.2). Folded into STD-13 RULE-10 sub-clause 2 (slide-topology pre-author pass).
 
 ---
 
@@ -715,7 +717,7 @@ Aligns with D20 (process amendment scope). Phase 9.D in Cycle 304.
 | Severity    | MINOR                                                |
 | Phase       | Phase 9.B (Implementing deck reconciliation)         |
 | Discovered  | Cycle 304, Session 304.7 (WO-304.6.b Stage 5 / B.1 execution) |
-| Status      | Open                                                 |
+| Status      | Reconciled                                                 |
 
 **Discovery.** WO-304.6.b §B.1 inserted a new slide ("Conversation status transitions") at display position 32. The WO's structural-gate spec for B.1 enumerated the new ZIP members the PPTX repack would add and prescribed the post-repack member count as a verification check. The spec under-counted by one member: it named the new `ppt/slides/slideNN.xml` file but omitted the corresponding `ppt/slides/_rels/slideNN.xml.rels` file that OOXML requires for every slide.
 
@@ -727,7 +729,7 @@ Aligns with D20 (process amendment scope). Phase 9.D in Cycle 304.
 
 **Reconciliation target.** WO-authoring practice for new-slide-insertion (B-family) deliverables. Update STD-13 (or a deck-reconciliation WO authoring checklist) to require, for every new slide inserted: enumeration of both `slideNN.xml` and `slideNN.xml.rels` as expected ZIP members, plus any updates to `[Content_Types].xml` and `ppt/_rels/presentation.xml.rels`. Aligns with D20 / D21 process-amendment scope. Phase 9.D in Cycle 304.
 
-**Status.** Open.
+**Status.** Reconciled (Phase 9.D — WO-304.9.b, STD-13 v1.2). Folded into STD-13 RULE-10 sub-clause 3 (full ZIP-member enumeration for new-slide-insertion deliverables).
 
 ---
 
@@ -738,7 +740,7 @@ Aligns with D20 (process amendment scope). Phase 9.D in Cycle 304.
 | Severity    | MAJOR                                                |
 | Phase       | Phase 9.B (Implementing deck reconciliation)         |
 | Discovered  | Cycle 304, Session 304.8 (A.17 verification of post-Stage-5 deck) |
-| Status      | Open                                                 |
+| Status      | Reconciled                                                 |
 
 **Discovery.** When WO-304.6.b v1.1 struck A.1 (per D21), the Stage 3 redux dispatch list was reconstructed around the strike. A.5 (Slide 13 prose update) — which had been listed before A.1 in the original Stage 3 dispatch — was collateral-killed unobserved during the reconstruction. No participant detected A.5's absence at dispatch, and no automated check flagged the omission. Stages 1–5 closed believing all non-struck Stage 3 deliverables had landed. A.17 verification in Session 304.8 (the safety-net sweep deferred during 304.7) surfaced Slide 13 in pre-A.5 state — appendMessage signature stale, prose unchanged. Required a Stage 6 corrective dispatch (WO-304.6.b v1.2 with A.5 reinstated and A.22 added).
 
@@ -755,7 +757,7 @@ Aligns with D20 (process amendment scope). Phase 9.D in Cycle 304.
 
 Both close the same hole from different directions. Owner ruling needed; recommend ratifying both since they are non-overlapping and cheap.
 
-**Status.** Open.
+**Status.** Reconciled (Phase 9.D — WO-304.9.b, STD-13 v1.2). Both clauses ratified and codified as STD-13 RULE-11 (redux-dispatch enumeration + strike-handling flanking IDs in §Change History).
 
 ---
 
@@ -778,8 +780,33 @@ Both close the same hole from different directions. Owner ruling needed; recomme
 
 **Reconciliation target.** One-line edit on Slide 47's `appendMessage` call in any Phase 9.D corrective WO. Either (a) folded into WO-304.9.a as a small additional Edit on the deck binary (requires a Phase 9.D editorial branch on `training-decks`), or (b) deferred to Cycle 305+ as a standalone follow-up touch (the deck has just been merged to `training-decks/main`; opening a single-edit PR here is acceptable but not urgent). Owner ruling needed during Phase 9.D triage.
 
-**Status.** Open.
+**Phase 9.D triage outcome (Session 304.9):** Option (b) — deferred to Cycle 305+. Single-line consistency drift not worth opening another `training-decks` editorial branch for.
+
+**Status.** Open (deferred to Cycle 305+).
 
 ---
 
-_Last updated: 2026-05-04 — Cycle 304, Session 304.9 (D19–D24 appended for Phase 9.D triage)._
+### D25 — STD-13 self-declared front-matter `path:` field stale (named non-existent `tier-0-operational/` directory)
+
+| Field       | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| Severity    | MINOR                                                |
+| Phase       | Phase 9.D (Build-discoveries reconciliation)         |
+| Discovered  | Cycle 304, Session 304.9 (WO-304.9.b execution)      |
+| Status      | Reconciled                                           |
+
+**Discovery.** During WO-304.9.b execution, Claude Code observed that `work-order-standard.md`'s own front-matter `path:` field declared `products/hopper/engineering/standards/tier-0-operational/work-order.md` — a path that does not exist on disk. The actual file lives at `products/hopper/engineering/standards/work-order-standard.md`. The drift pre-dated WO-304.9.b and was not part of any Edit in that WO.
+
+**Concrete exposure.** None functional — the front-matter `path:` field is declarative metadata, not a runtime reference; nothing in the build chain consumes it. The drift is a discoverability defect: any tool or contributor that trusts the front-matter `path:` to locate the file will fail. The drift also exemplifies D19 in negative form — when canonical references mix path prefixes and filename-only conventions inconsistently, the path-prefixed reference is the brittle one.
+
+**Evidence.** `work-order-standard.md` front-matter line 4 (pre-fix): `path: products/hopper/engineering/standards/tier-0-operational/work-order.md`. Repository directory listing under `products/hopper/engineering/standards/`: contains `work-order-standard.md` (and other tier-0 standards), no `tier-0-operational/` subdirectory. Claude Code surfaced the drift in the WO-304.9.b execution report's "Path notes" section.
+
+**Workaround applied.** None — discovered post-merge.
+
+**Reconciliation target.** Single-line front-matter edit on `work-order-standard.md`: `path:` field updated to `products/hopper/engineering/standards/work-order-standard.md`. Bundled into the same commit as the WO-304.9.b STD-13 v1.1 → v1.2 amendments (commit `a27a69cc` on hopper `main`). Doc-only edit; no WO required (STD-13 §2 *Does NOT Apply To* — front-matter metadata is not a code change).
+
+**Status.** Reconciled (in-cycle by commit `a27a69cc` on hopper `main`).
+
+---
+
+_Last updated: 2026-05-04 — Cycle 304, Session 304.9 (Phase 9.D reconciliation marks applied; D25 logged-and-resolved-in-cycle)._
