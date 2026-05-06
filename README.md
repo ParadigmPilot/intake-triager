@@ -340,6 +340,8 @@ The repo ships `.env.example` with **nine keys**. Production values override per
 
 The frontend (Vite) runs on `:5173`. The backend listens on `PORT`.
 
+`ORG_NAME` and `CRISIS_LINE` are validated at server boot: both must be present and non-empty. If either is unset or empty, `src/backend/server.js` emits a `config_invalid` log event and calls `process.exit(1)` before the HTTP listener binds. Rationale: both vars flow through `prompt-assembler.js`'s `substitute()` via `String(value)`, which converts `undefined` to the literal string `"undefined"`. Rule 7 (crisis-end) is the only path that surfaces `{{CRISIS_LINE}}` to the patron; without boot-time validation, a misconfigured deployment would silently emit "Crisis resource line: undefined" to an employee in crisis.
+
 ## Observability
 
 The basic posture this repo ships:
