@@ -95,11 +95,13 @@ Open http://localhost:5173.
 ### Run tests
 
 ```sh
-npm test          # unit suite — 9 files, 80 tests, no external services
+npm test          # unit suite, no external services
 npm run test:e2e  # E2E suite — drives Taylor through three rule paths against
                   # a real Anthropic API and an isolated test DB.
                   # Requires .env.test configured (template: .env.test.example).
 ```
+
+The unit suite covers **10 files, 85 tests**, no external services. Expediter, handlers, and prompt-assembler are the named-module floor; per-security-module coverage and per-handler coverage (including `server-boot.test.js`) are the norm.
 
 The test runner is [Vitest](https://vitest.dev/). The E2E suite runs under a separate config (`vitest.e2e.config.js`); see `test/e2e/` for path tests and helpers.
 
@@ -173,6 +175,73 @@ Every Pantry read filters by `owner_id`; every write carries it. The single-user
 
 The DDL you run today is `src/db/schema.sql`. `src/db/migrations/001-initial.sql` is byte-for-byte identical and exists as the seed for future migration tooling. The two files are kept in sync by hand for now; production-grade migration management is taught in *Implementing Standards for LLM Apps*.
 
+## Repo structure
+
+The full prescribed tree:
+
+```
+intake-triager/
+├── README.md
+├── package.json
+├── .env.example
+├── .env.test.example                # E2E env template
+├── .gitignore
+├── vitest.e2e.config.js             # Vitest E2E runner config
+├── src/
+│   ├── backend/
+│   │   ├── app.js                   # Express app factory (composes middleware + routes)
+│   │   ├── server.js                # HTTP server entry (calls app.listen); separate from app.js so tests can import app without binding a port
+│   │   ├── converse.js              # POST /converse handler
+│   │   ├── observability.js         # Single producer of §10 JSON one-line-per-event stdout logs
+│   │   ├── prompt-assembler.js      # The Briefing
+│   │   ├── chef.js                  # SDK bridge to api.anthropic.com (The Line)
+│   │   ├── expediter.js             # Response parser + marker dispatcher
+│   │   ├── handlers/
+│   │   │   └── triage-record.js     # Handles TRIAGE_RECORD tickets
+│   │   ├── pantry.js                # PostgreSQL access layer
+│   │   ├── prompts/
+│   │   │   └── system.md            # Locked system prompt (six-section structure)
+│   │   └── security/
+│   │       ├── rate-limit.js        # Per-IP rate limit (item 7)
+│   │       ├── cost-ceiling.js      # Per-conversation cost ceiling (item 8)
+│   │       ├── cors.js              # CORS allowed-origins enforcement (item 9)
+│   │       ├── input-validation.js  # Length caps, content-type checks
+│   │       └── prompt-injection.js  # User-text isolation
+│   ├── frontend/
+│   │   ├── index.html
+│   │   ├── main.jsx                 # React entry
+│   │   └── components/
+│   │       ├── App.jsx              # The Dining Room (root)
+│   │       ├── Transcript.jsx       # The Dining Room (rendering)
+│   │       └── MessageInput.jsx     # The Runner
+│   └── db/
+│       ├── schema.sql               # DDL for all tables
+│       └── migrations/
+│           └── 001-initial.sql      # Baseline migration matching schema.sql
+└── test/
+    ├── converse.test.js             # /converse handler unit tests
+    ├── cors.test.js                 # CORS module unit tests
+    ├── cost-ceiling.test.js         # Cost-ceiling module unit tests
+    ├── expediter.test.js
+    ├── handlers.test.js
+    ├── input-validation.test.js     # Input-validation module unit tests
+    ├── prompt-assembler.test.js
+    ├── prompt-injection.test.js     # Prompt-injection module unit tests
+    ├── rate-limit.test.js           # Rate-limit module unit tests
+    ├── server-boot.test.js          # server.js boot-validation unit tests
+    └── e2e/
+        ├── helpers/
+        │   ├── conversation.js      # Path-test conversation driver
+        │   ├── db.js                # Isolated test-DB lifecycle
+        │   ├── log-capture.js       # §10 stdout-event capture for path assertions
+        │   └── server.js            # Test-server lifecycle (binds ephemeral port)
+        ├── standard-intake.test.js  # Path 1 — Rules 1–6 happy path
+        ├── mandatory-escalation.test.js  # Path 2 — Rule mandatory-escalation
+        └── crisis-end.test.js       # Path 3 — Rule 7 crisis-end
+```
+
+Mirrors `intake-triager-gold-vision.md` v1.7.1 §4 _Repo structure_ (binding canon).
+
 ## Behavior contract
 
 Taylor's full ruleset lives in `src/backend/prompts/system.md`. That file is the locked prompt; every rule is load-bearing.
@@ -244,7 +313,7 @@ Reads `src/backend/prompts/system.md` once at module load (process-lifetime cach
 | --- | --- |
 | `cook` | `(briefing) → {text, usage}` |
 
-Single-call wrapper around `@anthropic-ai/sdk` `messages.create`. Non-streaming. Uses the configured `MODEL` value.
+Single-call wrapper around `@anthropic-ai/sdk` `messages.create`. Non-streaming. Uses the configured `MODEL` value. The SDK's required `max_tokens` parameter is a module-load constant in `chef.js` (`MAX_TOKENS = 4096`) — the **per-turn** output cap, distinct from the **cumulative** `CONVERSATION_TOKEN_CEILING` env var.
 
 ### Expediter — parser + dispatcher (`src/backend/expediter.js`)
 
@@ -270,6 +339,32 @@ The repo ships `.env.example` with **nine keys**. Production values override per
 | `CRISIS_LINE` | (set per deployment) | Substituted into `{{CRISIS_LINE}}` in `system.md` | `src/backend/converse.js` |
 
 The frontend (Vite) runs on `:5173`. The backend listens on `PORT`.
+
+`ORG_NAME` and `CRISIS_LINE` are validated at server boot: both must be present and non-empty. If either is unset or empty, `src/backend/server.js` emits a `config_invalid` log event and calls `process.exit(1)` before the HTTP listener binds. Rationale: both vars flow through `prompt-assembler.js`'s `substitute()` via `String(value)`, which converts `undefined` to the literal string `"undefined"`. Rule 7 (crisis-end) is the only path that surfaces `{{CRISIS_LINE}}` to the patron; without boot-time validation, a misconfigured deployment would silently emit "Crisis resource line: undefined" to an employee in crisis.
+
+## Security floor
+
+The repo ships a basic-app-level security floor — eleven items: nine enforcement controls plus two patterns that prepare for real auth without rewrite. Mirrors `intake-triager-gold-vision.md` §10 (binding canon).
+
+| # | Control | Module / location |
+| --- | --- | --- |
+| 1 | Secrets discipline (`.env`, `.gitignore`, `.env.example`) | repo conventions |
+| 2 | TLS in production (dev runs HTTP) | deployment-time |
+| 3 | Input validation at the door — `MAX_CONTENT_LENGTH = 8000`, `Content-Type` enforcement, `multipart/form-data` rejection | `src/backend/security/input-validation.js` |
+| 4 | Output sanitization (React default escaping) | frontend |
+| 5 | Prompt-injection hygiene — `<user_message>` wrapper (see below) | `src/backend/security/prompt-injection.js` |
+| 6 | Parameterized queries (every Pantry call) | `src/backend/pantry.js` |
+| 7 | Per-IP rate limit on `/converse` (`RATE_LIMITED` 429) | `src/backend/security/rate-limit.js` |
+| 8 | Per-conversation cost ceiling (`TOKEN_CEILING_EXCEEDED` 429) | `src/backend/security/cost-ceiling.js` |
+| 9 | CORS allowed-origins enforcement | `src/backend/security/cors.js` |
+| 10 | Object-level access scoping — every Pantry read filters by `owner_id` (pattern) | `src/backend/pantry.js` |
+| 11 | Identity stub — `req.user` shim (pattern) | `src/backend/app.js` |
+
+Items 1–9 are enforcement; items 10–11 are auth-ready shape (pattern, not enforcement — the single-user demo hardcodes identity, and items 10–11 shape the codebase so real auth lands as a substitution, not a rewrite).
+
+**Prompt-injection wrapper (item 5).** Patron text is wrapped in `<user_message>...</user_message>` tags between `pantry.loadMessages` and `Briefing.assemblePrompt` — transport-time, not storage-time (`messages.content` stays raw). Any literal `</user_message>` substring inside Patron content is neutralized to `&lt;/user_message&gt;` before wrapping, closing the envelope-escape vector. The wrap signals "data, not instructions" to the Chef without polluting persisted history.
+
+This floor is what every LLM app should ship with on day one; it is _not_ sufficient for a regulated production deployment.
 
 ## Observability
 

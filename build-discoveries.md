@@ -884,4 +884,25 @@ Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on i
 
 ---
 
-_Last updated: 2026-05-06 — Cycle 305, Session 305.2 (D18 code-side closure landed via WO-305.2.a — server.js boot-validation + Vitest server-boot.test.js)._
+### D29 — Gold vision §4 _Repo structure_ tree omits `test/server-boot.test.js` shipped in Session 305.2
+
+| Field      | Value                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------- |
+| Severity   | MINOR (canon hygiene — editorial only, no behavioral semantics)                              |
+| Phase      | Phase 9.E (surfaced during WO-305.3.a inventory pass, Session 305.3)                          |
+| Discovered | Cycle 305, Session 305.3                                                                     |
+| Status     | Reconciled (gold vision §4 tree amended + version bumped 1.7 → 1.7.1 in same WO — WO-305.3.a) |
+
+**Discovery.** The Phase 9.E.2 inventory pass (`phase-9e2-readme-inventory.md`) preparing the README v1.7 cascade WO surfaced a canon-vs-repo gap: gold vision §4 _Repo structure_ tree (lines 225–282 at v1.7) enumerates 9 files in the test/ block (converse, cors, cost-ceiling, expediter, handlers, input-validation, prompt-assembler, prompt-injection, rate-limit). The 10th file — `test/server-boot.test.js`, shipped in Cycle 305 Session 305.2 via WO-305.2.a (D18 code-side reconciliation, merge commit `978cbf9`) — was not enumerated in canon. The gap was editorial-only; behavioral semantics of the boot-validation rule are canonized correctly in v1.7 §10 _Configuration_ Boot-time validation subsection. The §4 tree comment for `server.js` similarly does not name boot-validation responsibility, but that is a separate editorial gap left for a future cycle.
+
+**Concrete exposure.** The README v1.7 cascade obligation A.6 ("Update repo-tour file tree to reflect the v1.7 structure") was disposition-locked as **verbatim copy of gold vision §4 tree**. Without amending §4 first, the README would either ship internally inconsistent (A.8's amended unit-test prose declaring "10 files / 85 tests" alongside a tree showing 9 test files) or introduce README-vs-canon drift (the very problem the cascade is designed to eliminate).
+
+**Resolution applied.** Hard-pause amendment to gold vision §4 invoked under the explicit CRITICAL exception clause in `cycle-305-baseline.md` v1.1 ("no further canon bumps in 305 unless a CRITICAL discovery forces a hard-pause amendment"). Amendment is editorial-only: (a) §4 tree gains one line — `├── server-boot.test.js          # server.js boot-validation unit tests`; (b) YAML version bumps 1.7 → 1.7.1 (patch-level hygiene, not a v1.8 amendment); (c) Appendix A gains a new v1.7.1 hygiene patch entry above the v1.7 entry. v1.7 GOLD-graduation status preserved; v1.7's enumeration of v1.6→v1.7 amendments retained verbatim. README A.6 then mirrors the amended canon faithfully.
+
+**Reconciliation target.** Reconciled in WO-305.3.a Edits 1–3 (gold vision YAML + §4 tree + Appendix A patch entry on `ServiceBridge`). README mirroring lands in Edit 6 on `intake-triager`. Future canon-vs-repo audit candidates not in this WO scope: (i) §4 tree comment for `server.js` does not name boot-validation responsibility (Cycle 306+ candidate); (ii) any other file-tree drift introduced by future work — surface as new D-entries.
+
+**Status.** Reconciled (canon edit landed in same WO; born Reconciled).
+
+---
+
+_Last updated: 2026-05-06 — Cycle 305, Session 305.3 (README v1.7 cascade landed via WO-305.3.a — five README amendments, gold vision §4 v1.7.1 hygiene patch, Appendix B README row closure annotation; D29 born Reconciled)._
