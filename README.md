@@ -95,11 +95,13 @@ Open http://localhost:5173.
 ### Run tests
 
 ```sh
-npm test          # unit suite — 9 files, 80 tests, no external services
+npm test          # unit suite, no external services
 npm run test:e2e  # E2E suite — drives Taylor through three rule paths against
                   # a real Anthropic API and an isolated test DB.
                   # Requires .env.test configured (template: .env.test.example).
 ```
+
+The unit suite covers **10 files, 85 tests**, no external services. Expediter, handlers, and prompt-assembler are the named-module floor; per-security-module coverage and per-handler coverage (including `server-boot.test.js`) are the norm.
 
 The test runner is [Vitest](https://vitest.dev/). The E2E suite runs under a separate config (`vitest.e2e.config.js`); see `test/e2e/` for path tests and helpers.
 
