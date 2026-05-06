@@ -175,6 +175,73 @@ Every Pantry read filters by `owner_id`; every write carries it. The single-user
 
 The DDL you run today is `src/db/schema.sql`. `src/db/migrations/001-initial.sql` is byte-for-byte identical and exists as the seed for future migration tooling. The two files are kept in sync by hand for now; production-grade migration management is taught in *Implementing Standards for LLM Apps*.
 
+## Repo structure
+
+The full prescribed tree:
+
+```
+intake-triager/
+├── README.md
+├── package.json
+├── .env.example
+├── .env.test.example                # E2E env template
+├── .gitignore
+├── vitest.e2e.config.js             # Vitest E2E runner config
+├── src/
+│   ├── backend/
+│   │   ├── app.js                   # Express app factory (composes middleware + routes)
+│   │   ├── server.js                # HTTP server entry (calls app.listen); separate from app.js so tests can import app without binding a port
+│   │   ├── converse.js              # POST /converse handler
+│   │   ├── observability.js         # Single producer of §10 JSON one-line-per-event stdout logs
+│   │   ├── prompt-assembler.js      # The Briefing
+│   │   ├── chef.js                  # SDK bridge to api.anthropic.com (The Line)
+│   │   ├── expediter.js             # Response parser + marker dispatcher
+│   │   ├── handlers/
+│   │   │   └── triage-record.js     # Handles TRIAGE_RECORD tickets
+│   │   ├── pantry.js                # PostgreSQL access layer
+│   │   ├── prompts/
+│   │   │   └── system.md            # Locked system prompt (six-section structure)
+│   │   └── security/
+│   │       ├── rate-limit.js        # Per-IP rate limit (item 7)
+│   │       ├── cost-ceiling.js      # Per-conversation cost ceiling (item 8)
+│   │       ├── cors.js              # CORS allowed-origins enforcement (item 9)
+│   │       ├── input-validation.js  # Length caps, content-type checks
+│   │       └── prompt-injection.js  # User-text isolation
+│   ├── frontend/
+│   │   ├── index.html
+│   │   ├── main.jsx                 # React entry
+│   │   └── components/
+│   │       ├── App.jsx              # The Dining Room (root)
+│   │       ├── Transcript.jsx       # The Dining Room (rendering)
+│   │       └── MessageInput.jsx     # The Runner
+│   └── db/
+│       ├── schema.sql               # DDL for all tables
+│       └── migrations/
+│           └── 001-initial.sql      # Baseline migration matching schema.sql
+└── test/
+    ├── converse.test.js             # /converse handler unit tests
+    ├── cors.test.js                 # CORS module unit tests
+    ├── cost-ceiling.test.js         # Cost-ceiling module unit tests
+    ├── expediter.test.js
+    ├── handlers.test.js
+    ├── input-validation.test.js     # Input-validation module unit tests
+    ├── prompt-assembler.test.js
+    ├── prompt-injection.test.js     # Prompt-injection module unit tests
+    ├── rate-limit.test.js           # Rate-limit module unit tests
+    ├── server-boot.test.js          # server.js boot-validation unit tests
+    └── e2e/
+        ├── helpers/
+        │   ├── conversation.js      # Path-test conversation driver
+        │   ├── db.js                # Isolated test-DB lifecycle
+        │   ├── log-capture.js       # §10 stdout-event capture for path assertions
+        │   └── server.js            # Test-server lifecycle (binds ephemeral port)
+        ├── standard-intake.test.js  # Path 1 — Rules 1–6 happy path
+        ├── mandatory-escalation.test.js  # Path 2 — Rule mandatory-escalation
+        └── crisis-end.test.js       # Path 3 — Rule 7 crisis-end
+```
+
+Mirrors `intake-triager-gold-vision.md` v1.7.1 §4 _Repo structure_ (binding canon).
+
 ## Behavior contract
 
 Taylor's full ruleset lives in `src/backend/prompts/system.md`. That file is the locked prompt; every rule is load-bearing.
