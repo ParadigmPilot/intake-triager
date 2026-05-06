@@ -626,7 +626,7 @@ When either env var is unset, the value is `undefined`; `prompt-assembler.js`'s 
 
 Owner ruling needed during Phase 9.D. Either (or both) disposition belongs in `system.md` `[CONTEXT]` block semantics: should an unset trusted-context placeholder fail boot, fall back, or both?
 
-**Status.** Reconciled (Phase 9.D — WO-304.9.a, gold vision v1.7). Note: canon edit lands in v1.7; code change (boot-time fail-fast in `server.js`) deferred to Cycle 305+ per Phase 9.D Sole Benefactor decision.
+**Status.** Reconciled. Canon edit landed in gold vision v1.7 (Cycle 304 Phase 9.D — WO-304.9.a). Code edit landed in Cycle 305 Session 305.2 (WO-305.2.a) — `server.js` validates `ORG_NAME` and `CRISIS_LINE` non-empty at boot and emits a `config_invalid` §10 event + `process.exit(1)` on failure; Vitest test `test/server-boot.test.js` covers four failure paths (ORG_NAME unset/empty, CRISIS_LINE unset/empty) plus the success path.
 
 ---
 
@@ -884,4 +884,4 @@ Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on i
 
 ---
 
-_Last updated: 2026-05-06 — Cycle 305, Session 305.1 (D24 closed via WO-305.1.a A.6; D26 logged from naming-standard audit; D27 + D28 logged from WO-305.1.a execution caveats)._
+_Last updated: 2026-05-06 — Cycle 305, Session 305.2 (D18 code-side closure landed via WO-305.2.a — server.js boot-validation + Vitest server-boot.test.js)._
