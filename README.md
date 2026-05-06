@@ -313,7 +313,7 @@ Reads `src/backend/prompts/system.md` once at module load (process-lifetime cach
 | --- | --- |
 | `cook` | `(briefing) → {text, usage}` |
 
-Single-call wrapper around `@anthropic-ai/sdk` `messages.create`. Non-streaming. Uses the configured `MODEL` value.
+Single-call wrapper around `@anthropic-ai/sdk` `messages.create`. Non-streaming. Uses the configured `MODEL` value. The SDK's required `max_tokens` parameter is a module-load constant in `chef.js` (`MAX_TOKENS = 4096`) — the **per-turn** output cap, distinct from the **cumulative** `CONVERSATION_TOKEN_CEILING` env var.
 
 ### Expediter — parser + dispatcher (`src/backend/expediter.js`)
 
