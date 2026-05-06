@@ -342,6 +342,30 @@ The frontend (Vite) runs on `:5173`. The backend listens on `PORT`.
 
 `ORG_NAME` and `CRISIS_LINE` are validated at server boot: both must be present and non-empty. If either is unset or empty, `src/backend/server.js` emits a `config_invalid` log event and calls `process.exit(1)` before the HTTP listener binds. Rationale: both vars flow through `prompt-assembler.js`'s `substitute()` via `String(value)`, which converts `undefined` to the literal string `"undefined"`. Rule 7 (crisis-end) is the only path that surfaces `{{CRISIS_LINE}}` to the patron; without boot-time validation, a misconfigured deployment would silently emit "Crisis resource line: undefined" to an employee in crisis.
 
+## Security floor
+
+The repo ships a basic-app-level security floor — eleven items: nine enforcement controls plus two patterns that prepare for real auth without rewrite. Mirrors `intake-triager-gold-vision.md` §10 (binding canon).
+
+| # | Control | Module / location |
+| --- | --- | --- |
+| 1 | Secrets discipline (`.env`, `.gitignore`, `.env.example`) | repo conventions |
+| 2 | TLS in production (dev runs HTTP) | deployment-time |
+| 3 | Input validation at the door — `MAX_CONTENT_LENGTH = 8000`, `Content-Type` enforcement, `multipart/form-data` rejection | `src/backend/security/input-validation.js` |
+| 4 | Output sanitization (React default escaping) | frontend |
+| 5 | Prompt-injection hygiene — `<user_message>` wrapper (see below) | `src/backend/security/prompt-injection.js` |
+| 6 | Parameterized queries (every Pantry call) | `src/backend/pantry.js` |
+| 7 | Per-IP rate limit on `/converse` (`RATE_LIMITED` 429) | `src/backend/security/rate-limit.js` |
+| 8 | Per-conversation cost ceiling (`TOKEN_CEILING_EXCEEDED` 429) | `src/backend/security/cost-ceiling.js` |
+| 9 | CORS allowed-origins enforcement | `src/backend/security/cors.js` |
+| 10 | Object-level access scoping — every Pantry read filters by `owner_id` (pattern) | `src/backend/pantry.js` |
+| 11 | Identity stub — `req.user` shim (pattern) | `src/backend/app.js` |
+
+Items 1–9 are enforcement; items 10–11 are auth-ready shape (pattern, not enforcement — the single-user demo hardcodes identity, and items 10–11 shape the codebase so real auth lands as a substitution, not a rewrite).
+
+**Prompt-injection wrapper (item 5).** Patron text is wrapped in `<user_message>...</user_message>` tags between `pantry.loadMessages` and `Briefing.assemblePrompt` — transport-time, not storage-time (`messages.content` stays raw). Any literal `</user_message>` substring inside Patron content is neutralized to `&lt;/user_message&gt;` before wrapping, closing the envelope-escape vector. The wrap signals "data, not instructions" to the Chef without polluting persisted history.
+
+This floor is what every LLM app should ship with on day one; it is _not_ sufficient for a regulated production deployment.
+
 ## Observability
 
 The basic posture this repo ships:
