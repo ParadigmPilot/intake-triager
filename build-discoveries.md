@@ -782,7 +782,9 @@ Both close the same hole from different directions. Owner ruling needed; recomme
 
 **Phase 9.D triage outcome (Session 304.9):** Option (b) — deferred to Cycle 305+. Single-line consistency drift not worth opening another `training-decks` editorial branch for.
 
-**Status.** Open (deferred to Cycle 305+).
+**Cycle 305 closure (Session 305.1):** Folded into WO-305.1.a as A.6 per RULE-06 same-asset rationale (Slide 47 display position carries four of six v1.7 cascade deliverables; one feature branch on the monorepo closes both v1.7 obligations 1, 2, 4 and D24 in a single PR). Slide 47 right-pane `appendMessage` call amended: `conversation_id: conversationId` shadow removed; identifier left as snake_case `conversation_id` alone, matching Slide 36's convention and `pantry.js` shipped signature.
+
+**Status.** Reconciled (Session 305.1, WO-305.1.a).
 
 ---
 
@@ -809,4 +811,32 @@ Both close the same hole from different directions. Owner ruling needed; recomme
 
 ---
 
-_Last updated: 2026-05-04 — Cycle 304, Session 304.9 (Phase 9.D reconciliation marks applied; D25 logged-and-resolved-in-cycle)._
+### D26 — Canon snake_case for HTTP/object surfaces is in tension with naming-standard RULE-07 / RULE-10
+
+| Field       | Value                                                                       |
+| ----------- | --------------------------------------------------------------------------- |
+| Severity    | MAJOR (governance — affects HTTP contract, Pantry signatures, deck content) |
+| Phase       | Phase 9.E (v1.7 cascade — surfaced during 305.1 inventory)                  |
+| Discovered  | Cycle 305, Session 305.1 (during WO-305.1.a A.6 audit against `naming.md`)  |
+| Status      | Open (Cycle 306+ candidate)                                                 |
+
+**Discovery.** During Session 305.1 inventory work, Sam asked whether D24's `conversation_id: conversationId` shadow was the only `naming.md`-violating identifier in the deck or whether a broader pattern existed. Audit against `products/hopper/engineering/standards/naming.md` v3.2 (the Naming Standard) surfaced a systematic tension: canon (gold vision §4 HTTP API contract; shipped `pantry.js`, `chef.js`, `converse.js`) deliberately uses **snake_case** for HTTP request/response body fields (`{conversation_id, content}`), Pantry-method object-parameter property names (`{conversation_id, role, content, token_usage, owner_id}`), and the local variables destructured from them. This conflicts with naming-standard **RULE-07** (JS variables = camelCase) and **RULE-10** (API request/response fields = camelCase; JSON config fields = camelCase). The choice is defensible on engineering grounds — one identifier from DB column → object property → API field eliminates a translation layer — but it diverges from the dominant industry convention (camelCase JSON + snake_case DB + translate at boundary).
+
+**Concrete exposure.** Every Implementing deck slide that shows a Pantry call (13, 26, 28, 29, 35, 36, 37, 38, 44, 46, 47), the HTTP-contract slide (11), and the marker-payload slides (18, 19) carries the same canon-vs-naming-standard tension. The README HTTP-contract subsection and Pantry-method enumeration carry it. The shipped `pantry.js`, `chef.js`, `converse.js` carry it. The DB DDL is correct per RULE-08 (snake_case columns); the violations live above the DB boundary.
+
+**Evidence.** Session 305.1 conversation (Bob inventory + Sam GOLD ruling): "Industry-standard convention (camelCase API + snake_case DB + boundary translation) is the destination, but the Cycle 305 baseline Package A scope-discipline holds. The tension is logged here as D26 for Cycle 306+ candidate slate." Repo verification at 305.0: `appendMessage` signature `{conversation_id, role, content, token_usage, owner_id}` confirms snake_case object-parameter convention shipped. Naming standard RULE-10 row 2 (API request/response fields) and RULE-07 (JS variables) verbatim require camelCase.
+
+**Workaround applied.** None at code level. WO-305.1.a A.6 brings Slide 47 into consistency with Slide 36 and shipped `pantry.js` — preserves canon snake_case rather than aligning to RULE-10. Naming-standard tension is acknowledged but unresolved in this WO.
+
+**Reconciliation target.** Cycle 306+ OBJ. Three options surfaced in Session 305.1 strategy:
+(a) Amend naming standard with an exception: "Fields with 1:1 DB column mapping may use snake_case throughout (DB → object → HTTP) for boundary-translation avoidance." Cheapest; canon already conforms.
+(b) **GOLD path — rewrite canon to RULE-10.** Switch HTTP body fields and Pantry-method object parameters to camelCase; introduce DB-boundary translation; refactor `pantry.js`, `chef.js`, `converse.js`; bump gold vision v1.7 → v1.8; cascade against Implementing deck, README, Mgmt deck. Estimated 5–10 sessions across multiple repos. Aligns with industry standard, drops impedance for every consumer, simplifies onboarding for any developer who has worked with modern JS APIs.
+(c) Acknowledge tension as deliberate — file an ADR documenting the snake_case-throughout choice; note RULE-10 as not-applicable to canon-spec'd surfaces. Middle cost; codifies divergence.
+
+Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on industry-standard alignment, reliability for consumers, prudence (cascade cost paid once vs. perpetual impedance tax), flexibility (camelCase JSON drops into every JS framework), and educational value (decks teach the dominant pattern). Holds for Cycle 306+ baseline drafting.
+
+**Status.** Open (Cycle 306+ candidate).
+
+---
+
+_Last updated: 2026-05-05 — Cycle 305, Session 305.1 (D24 closed via WO-305.1.a A.6; D26 logged from naming-standard audit)._
