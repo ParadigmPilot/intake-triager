@@ -905,4 +905,23 @@ Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on i
 
 ---
 
-_Last updated: 2026-05-06 — Cycle 305, Session 305.3 (README v1.7 cascade landed via WO-305.3.a — five README amendments, gold vision §4 v1.7.1 hygiene patch, Appendix B README row closure annotation; D29 born Reconciled)._
+### D30 — PPTX slide-clone WOs must include explicit rels-file amendment step when source slide carries a notesSlide reference
+
+| Field      | Value                                                                |
+| ---------- | -------------------------------------------------------------------- |
+| Severity   | MINOR (WO-authoring discipline — caught at execution; bug suppressed) |
+| Phase      | Phase 9.E (surfaced during WO-306.3a D.3.2 execution)                  |
+| Discovered | Cycle 306, Session 306.3                                               |
+| Status     | Open (STD-13 RULE-10 amendment candidate)                              |
+
+**Discovery.** WO-306.3a D.3.2 instructed verbatim clone of `ppt/slides/_rels/slide21.xml.rels` → `ppt/slides/_rels/slide35.xml.rels` with the explicit assertion "no edit is required to the rels file itself" — written under the assumption that slide rels files only reference the layout. The actual `slide21.xml.rels` carried two relationships: `rId1` → `slideLayout2.xml` (expected) AND `rId2` → `notesSlide18.xml` (not anticipated by the WO). A verbatim clone would have made slides 21 and 35 share `notesSlide18.xml` — a subtle "edit-one-affects-the-other" defect across PowerPoint's Notes view. The defect was caught at execution time and resolved by trimming the `notesSlide` ref from the cloned rels; documented in the WO-306.3a D.3 commit message as a deviation-with-rationale. PRECEDENT lineage: D20 (PPTX-WO Office-content-validation gap), D21 (inventory-time shape-topology blindspot), D22 (structural-gate ZIP-member under-count). D30 is the same class of hazard — WO author working from an incomplete model of OOXML — caught one round earlier in the loop because the executor inspected before cloning.
+
+**Concrete exposure.** Every PPTX slide-clone deliverable in the STD-13 RULE-10 lineage (D.3-class structural insertions) is designed assuming slide rels files carry only the layout reference. Real OOXML practice attaches per-slide `notesSlide` rels routinely (PowerPoint generates them for every slide unless explicitly stripped). Any future slide-clone WO that doesn't enumerate the source rels file's full relationship list at WO-draft time can produce shared-notes-slide defects at executor discretion (depending on whether the executor catches the issue). The same hazard generalizes to other rels classes — `image`, `chart`, `oleObject`, `hyperlink` — any per-slide relationship that conceptually belongs to the source slide rather than the new clone.
+
+**Reconciliation target.** STD-13 RULE-10 amendment in a future cycle: extend the slide-clone-deliverable spec (currently RULE-10 clause 3 — "Full ZIP-member enumeration for new-slide-insertion deliverables") to require explicit enumeration of the source slide's rels file contents at WO-draft time, with a per-relationship disposition (clone-verbatim / drop / re-target). Pairs naturally with the existing ZIP-member enumeration discipline. Likely framed as a new sub-clause of RULE-10 ("Rels-file enumeration for slide-clone deliverables").
+
+**Status.** Open (Cycle 307+ STD-13 RULE-10 amendment candidate).
+
+---
+
+_Last updated: 2026-05-08 — Cycle 306, Session 306.3 (WO-306.3a closed via `training-decks#5` merge; D30 logged on PPTX rels-clone discipline gap surfaced during D.3.2 execution)._
