@@ -931,7 +931,7 @@ Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on i
 | Severity   | MAJOR (UX defect — every-turn occurrence; manual-click workaround) |
 | Phase      | Phase 7 (Frontend — Dining Room + Runner)                          |
 | Discovered | Cycle 306, Session 306.0                                           |
-| Status     | Open (Session 306.4 fix in flight via WO-306.4.a)                  |
+| Status     | Reconciled (Session 306.4, intake-triager a4a3622)                 |
 
 **Discovery.** On the intake-triager UX, after a system reply lands the input box stays unresponsive to keystrokes until the user clicks into it. Reproduces on every turn except the initial mount. Manual workaround: click the input before typing the next message. Surfaced during interactive use after the Phase 7 frontend shipped (`303.8.a` Phase 7 Gate); named D31 at Cycle 306 baseline scoping (`cycle-306-baseline.md` v1.1 OBJ-2) and tracked as BL-143 (Cycle 306, Session 306.4 capture).
 
