@@ -886,11 +886,11 @@ Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on i
 
 ### D29 — Gold vision §4 _Repo structure_ tree omits `test/server-boot.test.js` shipped in Session 305.2
 
-| Field      | Value                                                                                       |
-| ---------- | ------------------------------------------------------------------------------------------- |
-| Severity   | MINOR (canon hygiene — editorial only, no behavioral semantics)                              |
+| Field      | Value                                                                                         |
+| ---------- | --------------------------------------------------------------------------------------------- |
+| Severity   | MINOR (canon hygiene — editorial only, no behavioral semantics)                               |
 | Phase      | Phase 9.E (surfaced during WO-305.3.a inventory pass, Session 305.3)                          |
-| Discovered | Cycle 305, Session 305.3                                                                     |
+| Discovered | Cycle 305, Session 305.3                                                                      |
 | Status     | Reconciled (gold vision §4 tree amended + version bumped 1.7 → 1.7.1 in same WO — WO-305.3.a) |
 
 **Discovery.** The Phase 9.E.2 inventory pass (`phase-9e2-readme-inventory.md`) preparing the README v1.7 cascade WO surfaced a canon-vs-repo gap: gold vision §4 _Repo structure_ tree (lines 225–282 at v1.7) enumerates 9 files in the test/ block (converse, cors, cost-ceiling, expediter, handlers, input-validation, prompt-assembler, prompt-injection, rate-limit). The 10th file — `test/server-boot.test.js`, shipped in Cycle 305 Session 305.2 via WO-305.2.a (D18 code-side reconciliation, merge commit `978cbf9`) — was not enumerated in canon. The gap was editorial-only; behavioral semantics of the boot-validation rule are canonized correctly in v1.7 §10 _Configuration_ Boot-time validation subsection. The §4 tree comment for `server.js` similarly does not name boot-validation responsibility, but that is a separate editorial gap left for a future cycle.
@@ -907,12 +907,12 @@ Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on i
 
 ### D30 — PPTX slide-clone WOs must include explicit rels-file amendment step when source slide carries a notesSlide reference
 
-| Field      | Value                                                                |
-| ---------- | -------------------------------------------------------------------- |
+| Field      | Value                                                                 |
+| ---------- | --------------------------------------------------------------------- |
 | Severity   | MINOR (WO-authoring discipline — caught at execution; bug suppressed) |
-| Phase      | Phase 9.E (surfaced during WO-306.3a D.3.2 execution)                  |
-| Discovered | Cycle 306, Session 306.3                                               |
-| Status     | Open (STD-13 RULE-10 amendment candidate)                              |
+| Phase      | Phase 9.E (surfaced during WO-306.3a D.3.2 execution)                 |
+| Discovered | Cycle 306, Session 306.3                                              |
+| Status     | Open (STD-13 RULE-10 amendment candidate)                             |
 
 **Discovery.** WO-306.3a D.3.2 instructed verbatim clone of `ppt/slides/_rels/slide21.xml.rels` → `ppt/slides/_rels/slide35.xml.rels` with the explicit assertion "no edit is required to the rels file itself" — written under the assumption that slide rels files only reference the layout. The actual `slide21.xml.rels` carried two relationships: `rId1` → `slideLayout2.xml` (expected) AND `rId2` → `notesSlide18.xml` (not anticipated by the WO). A verbatim clone would have made slides 21 and 35 share `notesSlide18.xml` — a subtle "edit-one-affects-the-other" defect across PowerPoint's Notes view. The defect was caught at execution time and resolved by trimming the `notesSlide` ref from the cloned rels; documented in the WO-306.3a D.3 commit message as a deviation-with-rationale. PRECEDENT lineage: D20 (PPTX-WO Office-content-validation gap), D21 (inventory-time shape-topology blindspot), D22 (structural-gate ZIP-member under-count). D30 is the same class of hazard — WO author working from an incomplete model of OOXML — caught one round earlier in the loop because the executor inspected before cloning.
 
@@ -924,4 +924,31 @@ Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on i
 
 ---
 
-_Last updated: 2026-05-08 — Cycle 306, Session 306.3 (WO-306.3a closed via `training-decks#5` merge; D30 logged on PPTX rels-clone discipline gap surfaced during D.3.2 execution)._
+### D31 — Input box loses focus across pending→idle transitions and is not auto-restored
+
+| Field      | Value                                                              |
+| ---------- | ------------------------------------------------------------------ |
+| Severity   | MAJOR (UX defect — every-turn occurrence; manual-click workaround) |
+| Phase      | Phase 7 (Frontend — Dining Room + Runner)                          |
+| Discovered | Cycle 306, Session 306.0                                           |
+| Status     | Open (Session 306.4 fix in flight via WO-306.4.a)                  |
+
+**Discovery.** On the intake-triager UX, after a system reply lands the input box stays unresponsive to keystrokes until the user clicks into it. Reproduces on every turn except the initial mount. Manual workaround: click the input before typing the next message. Surfaced during interactive use after the Phase 7 frontend shipped (`303.8.a` Phase 7 Gate); named D31 at Cycle 306 baseline scoping (`cycle-306-baseline.md` v1.1 OBJ-2) and tracked as BL-143 (Cycle 306, Session 306.4 capture).
+
+**Root cause.** Mechanically demonstrable from `App.jsx` + `MessageInput.jsx` source (verified Session 306.4):
+
+1. `App.handleSend` sets `pending=true` before the `fetch`, then `pending=false` in the `finally` block. The `finally` runs on every path — happy path, 4xx/5xx early-return, network throw — so `pending` correctly transitions back to false. Hypothesis "pending-flip miss" is falsified.
+2. `MessageInput` computes `disabled = terminal || pending` and binds it to the `<input>` element. While `pending=true`, the input is genuinely `disabled`.
+3. Per the HTMLInputElement spec a `disabled` input cannot hold focus — the browser blurs the input the instant the `disabled` attribute is added.
+4. When `pending` flips back to `false`, React reconciles the same DOM node from `disabled=true` to `disabled=false`. The input is again enabled, but **focus is not automatically restored**. `autoFocus` is a mount-only attribute and does not re-fire on the disabled→enabled transition.
+5. The user must therefore click into the input to refocus before typing. This matches the observed symptom exactly — a truly-still-disabled input would not respond to a click at all (a click on a `disabled` input is a no-op per spec).
+
+**Concrete exposure.** Every turn after the first carries this friction: the user sends a message, the input blurs while the system replies, and on receipt the user must click before continuing. Compounds with WCAG 2.4.3 (Focus Order) — keyboard-only and assistive-tech users experience it as a navigation discontinuity on every turn rather than a continuous typing flow.
+
+**Reconciliation target.** Surgical fix in `MessageInput.jsx` only — add `useRef` for the input element and a `useEffect` keyed on `[pending, terminal]` that calls `inputRef.current?.focus()` when both are false. Four edits, single file. RULE-06 boundary: D31 surface limited to input-box auto-focus restoration; broader focus-management work (e.g., focusing a transcript-end live-region for screen-reader announcements on response receipt) surfaces as separate build-discoveries (D32+) and defers to a future cycle. Tracked in WO-306.4.a.
+
+**Status.** Open (Session 306.4 fix in flight).
+
+---
+
+_Last updated: 2026-05-10 — Cycle 306, Session 306.4 (D31 logged with verified root-cause analysis; WO-306.4.a fix in progress)._
