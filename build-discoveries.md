@@ -947,8 +947,27 @@ Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on i
 
 **Reconciliation target.** Surgical fix in `MessageInput.jsx` only — add `useRef` for the input element and a `useEffect` keyed on `[pending, terminal]` that calls `inputRef.current?.focus()` when both are false. Four edits, single file. RULE-06 boundary: D31 surface limited to input-box auto-focus restoration; broader focus-management work (e.g., focusing a transcript-end live-region for screen-reader announcements on response receipt) surfaces as separate build-discoveries (D32+) and defers to a future cycle. Tracked in WO-306.4.a.
 
-**Status.** Open (Session 306.4 fix in flight).
+**Status.** Reconciled (Session 306.4, intake-triager `a4a3622`).
 
 ---
 
-_Last updated: 2026-05-10 — Cycle 306, Session 306.4 (D31 logged with verified root-cause analysis; WO-306.4.a fix in progress)._
+### D32 — TAKEAWAY block template body font drift (20pt template, 16pt deck reality)
+
+| Field      | Value                                                                          |
+| ---------- | ------------------------------------------------------------------------------ |
+| Severity   | MINOR (cosmetic / template hygiene — body font drift; no behavioral impact)    |
+| Phase      | Phase 9.E (surfaced during Cycle 306 Implementing-deck enrichment pass)        |
+| Discovered | Cycle 306, Session 306.5                                                       |
+| Status     | Reconciled (template fix applied in WO-307.0a — born Reconciled)               |
+
+**Discovery.** The TAKEAWAY block template at `.tmp/takeaway-block-template.xml` (extracted Session 306.3 from Mgmt-deck slide 29 sp[5] + sp[6]) was authored with body font `sz="2000"` (20pt). During the Cycle 306 Implementing-deck universal-TAKEAWAY adoption pass (WO-306.3c through WO-306.5g; 33 of 35 in-scope slides), Sam intervened in PowerPoint to reduce the body font from 20pt to 16pt to fit the available bottom-band geometry. Subsequent WOs that referenced the template implicitly carried the 20pt size in their as-authored form — but the deck reality (post-Sam-intervention) is 16pt. The template and the deck disagreed.
+
+**Concrete exposure.** Any future TAKEAWAY-block dispatch consuming the template verbatim — e.g., the planned Cycle 307 OBJ-3 dense-slide WO (slides 4 and 35) — would re-introduce 20pt body text and break deck-wide font consistency. The OOXML-semantic gate does not catch font-size drift; the divergence surfaces only at visual QA.
+
+**Reconciliation target.** Update the body `<p:sp>` `sz` attributes from `2000` to `1600` in `.tmp/takeaway-block-template.xml`. Kicker `<p:sp>` unchanged. Single-file edit; born Reconciled in the same WO that logs the discovery, matching the D29 precedent. **Durability caveat:** the template is gitignored under the `.tmp/` convention; D.1's correction lives on the executor's working copy only. Any future workstation or fresh clone consuming the template would either need to re-extract from the deck or use a tracked-template artifact. A canonical-home decision for the template — stay local, force-add, or relocate to `products/hopper/engineering/templates/` — surfaces as a separate Cycle 308+ candidate. A separable STD-13 RULE-10 amendment candidate — requiring template-vs-deck font-size verification at WO-authoring time — also remains as a Cycle 308+ process-closure item per the 307.0 checkpoint D32 disposition.
+
+**Status.** Reconciled on the executor's working copy (Cycle 307, Session 307.0 — template body font corrected to `sz="1600"` in WO-307.0a D.1). Durability follow-up tracked as a separate backlog candidate.
+
+---
+
+_Last updated: 2026-05-12 — Cycle 307, Session 307.0 (D32 logged + reconciled on executor working copy; TAKEAWAY block template body font aligned 20pt → 16pt; canonical-home decision deferred to Cycle 308+)._
