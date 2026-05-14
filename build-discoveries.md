@@ -970,4 +970,42 @@ Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on i
 
 ---
 
-_Last updated: 2026-05-12 — Cycle 307, Session 307.1 (D32 logged + reconciled on executor working copy; TAKEAWAY block template body font aligned 20pt → 16pt; canonical-home decision deferred to Cycle 308+)._
+### D33 — PowerPoint Compare deprecated by Microsoft; PPTX-WO visual-diff workflow shifts to XML-diff default
+
+| Field      | Value                                                                          |
+| ---------- | ------------------------------------------------------------------------------ |
+| Severity   | MINOR (process / tooling — vendor-side deprecation of an optional QA path)     |
+| Phase      | Phase 9.E (surfaced during Cycle 307 closure-trio review)                      |
+| Discovered | Cycle 307, Session 307.5                                                       |
+| Status     | Open (codification deferred to Cycle 308+ per IP-launch theme)                 |
+
+**Discovery.** Microsoft has deprecated the PowerPoint Compare feature in current Microsoft 365 builds. PPTX-WO discipline documentation (e.g., the WO-306.3a–WO-306.5g lineage and STD-13 RULE-10 verification clauses) references PowerPoint Compare as an optional visual-diff QA path alongside the canonical unpack-and-XML-diff workflow. With Compare deprecated, the canonical path collapses to a single workflow: unpack → diff XML → repack → `soffice` PDF render → `pdftoppm` JPEG QA (and/or PowerPoint COM PNG render at execution time). The optional Compare path no longer exists; references to it in process docs are now stale.
+
+**Concrete exposure.** Any future PPTX-WO that cites PowerPoint Compare as an acceptable verification step would direct an executor toward an unavailable tool. The workflow itself is robust (unpack-and-XML-diff is the default path in WO-306.3a forward and was exercised cleanly through WO-307.5a), but the discipline documentation carries stale references.
+
+**Reconciliation target.** Documentation refresh, not workflow change. Update STD-13 RULE-10 verification clauses and any PPTX-WO discipline references to remove PowerPoint Compare callouts; affirm unpack-and-XML-diff + COM PNG render as the sole canonical visual-QA path. Single-WO scope when prioritized; no urgent action required because the workflow itself was already operating on the canonical path. Tracked as a Cycle 308+ codification candidate per IP-launch theme separation in Cycle 307.
+
+**Status.** Open. Codification deferred to Cycle 308+.
+
+---
+
+### D34 — WO-drafting paragraph-index dual-form spec causes reader index drift
+
+| Field      | Value                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------ |
+| Severity   | MINOR (WO authoring discipline — caught at pre-flight; no execution defect; one-line spec amendment)   |
+| Phase      | Phase 9.E (surfaced during Cycle 307 Session 307.5 WO-307.5a execution)                                |
+| Discovered | Cycle 307, Session 307.5                                                                               |
+| Status     | Open (STD-13 RULE-10 amendment candidate deferred to Cycle 308+)                                       |
+
+**Discovery.** WO-307.5a (slides 4 + 35 universal-TAKEAWAY closure) specified each target paragraph in two forms — ordinal natural-language ("11th `<a:p>` element") AND 0-indexed bracket notation ("a:p[10]; 0-indexed"). The two forms were internally consistent (11th = a:p[10]) but the dual specification caused Claude Code at Pre-flight C to read the ordinal numbers as if they were 0-indexed indices, producing an off-by-one halt: WO said "delete a:p[25, 26, 27]" while reality had paragraphs 0–26 inclusive (27 did not exist); WO said "delete a:p[11]" while reality had paragraphs 0–10 inclusive (11 did not exist). The text-content guards in the WO ("delete the paragraph whose `<a:t>` reads `Three tables you'll always have...`") were unambiguous and protected against the wrong deletion. Pre-flight C correctly halted; owner ruled Option 2 (text-anchored deletion); execution proceeded clean.
+
+**Concrete exposure.** Future PPTX-WOs that specify paragraph indices in dual ordinal-plus-bracket form risk the same reader-index-drift halt. The text-content guard is robust (every target was correctly anchored to its `<a:t>` content), so the practical risk is a pre-flight halt + owner ruling round-trip — not a deletion at the wrong index. The cost is one pre-flight cycle per affected WO, not a content-integrity defect.
+
+**Reconciliation target.** STD-13 RULE-10 amendment candidate: specify paragraph indices in ONE form only — 0-indexed bracket notation `a:p[N]`. Ordinal natural-language ("11th paragraph", "first element", "last child") is prohibited in deletion specifications. Text-content guards (verbatim `<a:t>` substring) remain required as the primary contract. Scope: one-line spec amendment in STD-13 RULE-10 verification clauses; no retroactive WO edits. Tracked as a Cycle 308+ codification candidate per IP-launch theme separation in Cycle 307.
+
+**Status.** Open. STD-13 RULE-10 amendment deferred to Cycle 308+.
+
+---
+
+_Last updated: 2026-05-14 — Cycle 307, Session 307.5 (D33 + D34 logged; cycle 307 closure trio committed; universal-TAKEAWAY adoption at 35-of-35 in-scope content slides)._
