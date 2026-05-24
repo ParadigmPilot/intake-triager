@@ -7,12 +7,20 @@
 //   `config_invalid` §10 log event and calls process.exit(1) before
 //   the HTTP listener binds.
 //
+// Per WO-310.9a D.3: REQUIRED_ENV extended with three magic-link keys
+// (RESEND_API_KEY, RESEND_FROM_ADDRESS, MAGIC_LINK_SECRET). The
+// success-path test now seeds these alongside the original two so the
+// listener binds. Failure-path tests still assert that the missing
+// original-key name appears in the error string; because the error
+// surfaces every missing key joined by ', ', toContain('ORG_NAME')
+// remains valid even when other keys are absent in the same run.
+//
 // Five test cases — four failure paths + one success path:
 //   1. ORG_NAME unset            → exit 1; config_invalid log
 //   2. ORG_NAME empty string     → exit 1; config_invalid log
 //   3. CRISIS_LINE unset         → exit 1; config_invalid log
 //   4. CRISIS_LINE empty string  → exit 1; config_invalid log
-//   5. Both present and non-empty → boot succeeds; app.listen called
+//   5. All present and non-empty → boot succeeds; app.listen called
 //
 // Test pattern: validation runs at module-top-level (import side
 // effect). Per-test vi.resetModules() + dynamic import re-runs the
@@ -60,6 +68,12 @@ describe('server.js boot-time validation', () => {
     // baseline known-good — individual tests override
     process.env.ORG_NAME = 'TestOrg';
     process.env.CRISIS_LINE = '988';
+    // WO-310.9a: REQUIRED_ENV gained three magic-link keys. Seed them
+    // here so the success path reaches app.listen; failure-path tests
+    // delete or empty ORG_NAME/CRISIS_LINE only, leaving these set.
+    process.env.RESEND_API_KEY = 'test-resend-key';
+    process.env.RESEND_FROM_ADDRESS = 'test@example.com';
+    process.env.MAGIC_LINK_SECRET = 'test-magic-link-secret';
   });
 
   afterEach(() => {

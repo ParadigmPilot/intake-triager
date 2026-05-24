@@ -22,7 +22,13 @@ import app from './app.js';
 import { log } from './observability.js';
 import { bootstrapSchema } from '../db/bootstrap-schema.js';
 
-const REQUIRED_ENV = ['ORG_NAME', 'CRISIS_LINE'];
+const REQUIRED_ENV = [
+  'ORG_NAME',
+  'CRISIS_LINE',
+  'RESEND_API_KEY',
+  'RESEND_FROM_ADDRESS',
+  'MAGIC_LINK_SECRET',
+];
 const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
 if (missing.length > 0) {
   log({

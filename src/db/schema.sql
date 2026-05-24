@@ -16,7 +16,7 @@
 -- =====================================================================
 -- conversations — one row per intake
 -- =====================================================================
-CREATE TABLE conversations (
+CREATE TABLE IF NOT EXISTS conversations (
     id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id    UUID         NOT NULL,
     status      TEXT         NOT NULL DEFAULT 'active'
@@ -28,7 +28,7 @@ CREATE TABLE conversations (
 -- =====================================================================
 -- messages — append-only by convention; no DDL trigger blocks UPDATE/DELETE
 -- =====================================================================
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id               BIGSERIAL    PRIMARY KEY,
     conversation_id  UUID         NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
     owner_id         UUID         NOT NULL,
@@ -39,14 +39,14 @@ CREATE TABLE messages (
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_messages_conversation_created
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_created
     ON messages (conversation_id, created_at);
 
 -- =====================================================================
 -- triage_records — one row per completed intake
 -- UNIQUE (conversation_id) enforces "one record per conversation" per §9.
 -- =====================================================================
-CREATE TABLE triage_records (
+CREATE TABLE IF NOT EXISTS triage_records (
     id                     BIGSERIAL    PRIMARY KEY,
     conversation_id        UUID         NOT NULL REFERENCES conversations(id),
     owner_id               UUID         NOT NULL,
@@ -93,3 +93,43 @@ CREATE TABLE triage_records (
     created_at             TIMESTAMPTZ  NOT NULL DEFAULT now(),
     UNIQUE (conversation_id)
 );
+
+-- =====================================================================
+-- demo_links — one row per magic-link issuance
+-- Per restaurant-pattern-commercial-model-memo §7 Decision 1.
+-- token_hash stores SHA-256 of the raw token; the raw token only ever
+-- exists in the visitor's email and the request URL.
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS demo_links (
+    id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    owner_id      UUID         NOT NULL,
+    email         TEXT         NOT NULL,
+    token_hash    TEXT         NOT NULL UNIQUE,
+    issued_at     TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    expires_at    TIMESTAMPTZ  NOT NULL,
+    used_at       TIMESTAMPTZ,
+    ip_at_issue   TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_demo_links_email_issued
+    ON demo_links (email, issued_at DESC);
+
+-- =====================================================================
+-- demo_sessions — one row per verified magic-link click
+-- Lifetime cookie maps cookie value → demo_sessions.id.
+-- turn_budget captured at session-creation time so it can evolve
+-- without breaking existing sessions.
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS demo_sessions (
+    id             UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    owner_id       UUID         NOT NULL,
+    demo_link_id   UUID         NOT NULL REFERENCES demo_links(id),
+    turn_budget    INT          NOT NULL,
+    turns_used     INT          NOT NULL DEFAULT 0,
+    created_at     TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    expires_at     TIMESTAMPTZ  NOT NULL,
+    terminal_at    TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_demo_sessions_demo_link
+    ON demo_sessions (demo_link_id);
