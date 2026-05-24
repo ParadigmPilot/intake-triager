@@ -11,6 +11,7 @@
   },
   "scripts": {
     "dev": "concurrently \"node --watch src/backend/server.js\" \"vite\"",
+    "start": "node src/backend/server.js",
     "test": "vitest run --passWithNoTests",
     "test:e2e": "vitest run --config vitest.e2e.config.js --passWithNoTests",
     "build": "vite build"
