@@ -47,18 +47,51 @@ vi.mock('../src/backend/security/cost-ceiling.js', () => ({
   checkCostCeiling: vi.fn(),
 }));
 
+// Per WO-310.9c §D.5: converse handler now imports the circuit breaker,
+// the Anthropic-error classifier, and pantry-demo for in-transaction
+// session-turn increment. Mocks here keep the unit test isolated.
+vi.mock('../src/backend/demo/circuit-breaker.js', () => ({
+  recordSuccess: vi.fn(),
+  recordFailure: vi.fn(),
+}));
+
+vi.mock('../src/backend/demo/anthropic-error.js', () => ({
+  default: vi.fn(() => 'unknown'),
+  classifyError: vi.fn(() => 'unknown'),
+}));
+
+vi.mock('../src/backend/demo/pantry-demo.js', () => ({
+  default: {
+    incrementSessionTurns: vi.fn(),
+  },
+}));
+
 import pantry from '../src/backend/pantry.js';
 import { cook } from '../src/backend/chef.js';
 import { parse, dispatch } from '../src/backend/expediter.js';
 import { assemblePrompt } from '../src/backend/prompt-assembler.js';
 import { isolateHistory } from '../src/backend/security/prompt-injection.js';
 import { checkCostCeiling } from '../src/backend/security/cost-ceiling.js';
+import { recordSuccess, recordFailure } from '../src/backend/demo/circuit-breaker.js';
+import pantryDemo from '../src/backend/demo/pantry-demo.js';
 import converse from '../src/backend/converse.js';
 
 const OWNER_ID = '00000000-0000-0000-0000-000000000001';
+const DEMO_SESSION_ID = '00000000-0000-0000-0000-0000000000aa';
 
 function makeReq(body = {}) {
-  return { user: { id: OWNER_ID }, body };
+  return {
+    user: { id: OWNER_ID },
+    body,
+    // Per WO-310.9c: /converse runs after demoSessionMiddleware (9a)
+    // and costProtectionMiddleware (9c). Both populate req.demoSession.
+    demoSession: {
+      id: DEMO_SESSION_ID,
+      turn_budget: 10,
+      turns_used: 0,
+      terminal_at: null,
+    },
+  };
 }
 
 function makeRes() {
@@ -92,6 +125,13 @@ function setHappyPath() {
   });
   parse.mockReturnValue({ prose: 'hello back', markers: [] });
   dispatch.mockResolvedValue();
+  // Per WO-310.9c: the transaction callback now also increments
+  // demo_sessions.turns_used. Default mock returns a non-terminal row.
+  pantryDemo.incrementSessionTurns.mockResolvedValue({
+    turns_used: 1,
+    turn_budget: 10,
+    terminal_at: null,
+  });
 }
 
 describe('converse handler', () => {

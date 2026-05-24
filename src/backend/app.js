@@ -46,6 +46,7 @@ import verifyHandler from './demo/verify.js';
 import demoSessionMiddleware from './demo/session-middleware.js';
 import captchaMiddleware from './demo/captcha-middleware.js';
 import disposableEmailMiddleware from './demo/disposable-email-middleware.js';
+import costProtectionMiddleware from './demo/cost-protection-middleware.js';
 
 // ESM __dirname shim — repo lacks CommonJS __dirname; resolved at module load.
 const __filename = fileURLToPath(import.meta.url);
@@ -118,9 +119,15 @@ app.get('/api/demo/verify', verifyHandler);
 // POST /converse — gated by demoSessionMiddleware. The middleware
 // reads the demo_session cookie and 401s on failure; valid sessions
 // proceed through the existing chain unchanged.
+//
+// Per WO-310.9c: costProtectionMiddleware slots immediately after
+// demoSessionMiddleware (which populates req.demoSession). It enforces
+// per-session turn budget, circuit-breaker state, and global daily turn
+// cap before any downstream cost (body-parse, validation, Anthropic).
 app.post(
   '/converse',
   demoSessionMiddleware,
+  costProtectionMiddleware,
   rateLimit,
   express.json(),
   inputValidation,
