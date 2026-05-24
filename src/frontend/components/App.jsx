@@ -10,15 +10,17 @@
 //   §9 Status transitions — terminal states are 'complete' and 'escalated'
 //   §10 item 4            — React's default escaping handles all rendering
 //
-// BACKEND_URL is hardcoded for the teaching artifact. In production, this
-// would come from a Vite env var (VITE_BACKEND_URL) or be eliminated by
-// reverse-proxying the API behind the same origin.
+// BACKEND_URL is a relative path. In production (Express serves the built
+// SPA + API from one origin per WO-310.8a), this resolves to same-origin
+// — no CORS preflight on the hot path. In development (Vite at :5173 +
+// Express at :3000), vite.config.js server.proxy routes /converse to the
+// Express port (WO-310.8c).
 
 import { useState } from 'react';
 import Transcript from './Transcript.jsx';
 import MessageInput from './MessageInput.jsx';
 
-const BACKEND_URL = 'http://localhost:3000/converse';
+const BACKEND_URL = '/converse';
 const GENERIC_ERROR = 'we had a problem recording this — please try again';
 
 export default function App() {
