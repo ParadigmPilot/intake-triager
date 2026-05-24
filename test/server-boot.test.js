@@ -30,6 +30,20 @@ vi.mock('../src/backend/app.js', () => ({
   default: { listen: vi.fn() },
 }));
 
+// Per WO-310.8d Edit 2: server.js now calls bootstrapSchema() between
+// REQUIRED_ENV validation and app.listen(). Boot-time validation tests
+// must mock the bootstrap module so they exercise the env-validation
+// contract without depending on a reachable database. Mock returns the
+// success-path no-op shape (schema_already_applied) so test 5 (success
+// path) reaches app.listen unobstructed; failure-path tests 1–4 exit
+// 1 from REQUIRED_ENV check before bootstrapSchema is invoked.
+vi.mock('../src/db/bootstrap-schema.js', () => ({
+  bootstrapSchema: vi.fn().mockResolvedValue({
+    applied: false,
+    reason: 'schema_already_applied',
+  }),
+}));
+
 describe('server.js boot-time validation', () => {
   let exitSpy;
   let stdoutSpy;
