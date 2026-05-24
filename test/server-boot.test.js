@@ -74,6 +74,9 @@ describe('server.js boot-time validation', () => {
     process.env.RESEND_API_KEY = 'test-resend-key';
     process.env.RESEND_FROM_ADDRESS = 'test@example.com';
     process.env.MAGIC_LINK_SECRET = 'test-magic-link-secret';
+    // WO-310.9b: REQUIRED_ENV gained TURNSTILE_SECRET_KEY. Same posture
+    // as the 9a keys — seeded so the success path reaches app.listen.
+    process.env.TURNSTILE_SECRET_KEY = 'test-turnstile-secret';
   });
 
   afterEach(() => {

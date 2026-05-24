@@ -44,6 +44,8 @@ import converse from './converse.js';
 import issueLinkHandler from './demo/issue-link.js';
 import verifyHandler from './demo/verify.js';
 import demoSessionMiddleware from './demo/session-middleware.js';
+import captchaMiddleware from './demo/captcha-middleware.js';
+import disposableEmailMiddleware from './demo/disposable-email-middleware.js';
 
 // ESM __dirname shim — repo lacks CommonJS __dirname; resolved at module load.
 const __filename = fileURLToPath(import.meta.url);
@@ -88,12 +90,22 @@ app.use(cookieParser());
 // rate-limited (reuses the per-IP cap that already governs /converse),
 // JSON body. No demo-session gate (issuance is how visitors acquire a
 // session in the first place).
+//
+// Per WO-310.9b: defense-in-depth at the issuance surface. Two new
+// middlewares — captchaMiddleware (Cloudflare Turnstile verification)
+// and disposableEmailMiddleware (block-list lookup against the
+// disposable-email-domains npm package) — sit between rateLimit and
+// the issueLinkHandler. Both read req.body, so express.json() runs
+// ahead of them. Mount order per WO-310.9b §Success Criteria:
+//   cors → body-parsing → rateLimit → captcha → disposable → handler.
 app.options('/api/demo/issue-link', issueLinkCors);
 app.post(
   '/api/demo/issue-link',
   issueLinkCors,
-  rateLimit,
   express.json(),
+  rateLimit,
+  captchaMiddleware,
+  disposableEmailMiddleware,
   issueLinkHandler
 );
 
