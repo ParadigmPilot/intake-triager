@@ -133,3 +133,8 @@ CREATE TABLE IF NOT EXISTS demo_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_demo_sessions_demo_link
     ON demo_sessions (demo_link_id);
+
+-- Supports the global daily turn-cap query in cost-protection-middleware
+-- (WO-310.9c §D.4): SELECT SUM(turns_used) ... WHERE created_at >= date_trunc('day', now()).
+CREATE INDEX IF NOT EXISTS idx_demo_sessions_created_at
+    ON demo_sessions (created_at);

@@ -11,14 +11,25 @@
 //   §10 item 11 — owner_id sourced from req.user (identityStub)
 //
 // Sequence: insert/continue conversation → append user → cost-ceiling
-// guard → load history → isolate → assemble → cook → parse → atomic
-// (assistant-append + dispatch + status read) → respond.
+// guard → load history → isolate → assemble → cook (wrapped with
+// circuit-breaker recording) → parse → atomic (assistant-append +
+// dispatch + session-turn-increment + status read) → respond.
 //
 // The user message append (step 3) is intentionally OUTSIDE the
 // transaction. The user said something — that fact is recorded even if
-// the turn fails. Only the assistant append + handler dispatch are
-// transactional, so a handler exception rolls back the assistant row
-// without losing the user row.
+// the turn fails. Only the assistant append + handler dispatch +
+// session-turn-increment are transactional, so a handler exception
+// rolls back the assistant row and session-turn bump together — no
+// drift between conversation state and session state.
+//
+// Per WO-310.9c: the demo session (populated by demoSessionMiddleware
+// from WO-310.9a and validated by costProtectionMiddleware) drives an
+// in-transaction increment of demo_sessions.turns_used. The Anthropic
+// call is wrapped with circuit-breaker recordSuccess/recordFailure so
+// upstream degradation (workspace-cap or transient 5xx/429) trips the
+// breaker for subsequent requests. The response payload gains a
+// `demoSession` field carrying turnsUsed/turnBudget/terminalAt for the
+// frontend session-end CTA (WO-310.9d).
 //
 // Error envelope is generic per gold vision §4 *Error response*: no AI
 // output, no schema detail, no stack trace. Failures route through one
@@ -32,6 +43,9 @@ import { parse, dispatch } from './expediter.js';
 import { assemblePrompt } from './prompt-assembler.js';
 import { isolateHistory } from './security/prompt-injection.js';
 import { checkCostCeiling } from './security/cost-ceiling.js';
+import { recordSuccess, recordFailure } from './demo/circuit-breaker.js';
+import classifyError from './demo/anthropic-error.js';
+import pantryDemo from './demo/pantry-demo.js';
 import { log } from './observability.js';
 
 const GENERIC = 'we had a problem recording this — please try again';
@@ -88,28 +102,53 @@ export default async function converse(req, res) {
     };
 
     const briefing = assemblePrompt({ placeholders, history: isolated });
-    const { text, usage } = await cook(briefing);
+
+    // Anthropic call wrapped with circuit-breaker recording. The breaker
+    // observes upstream health across requests — successes close it,
+    // failures contribute toward a trip. Classification distinguishes
+    // workspace-cap (long open window) from transient 5xx/429/network
+    // (short open window per WO-310.9c §D.1).
+    let text;
+    let usage;
+    try {
+      ({ text, usage } = await cook(briefing));
+      recordSuccess();
+    } catch (err) {
+      recordFailure(classifyError(err));
+      throw err;
+    }
+
     const { prose, markers } = parse(text);
 
-    const finalStatus = await pantry.transaction(async (tx) => {
-      await pantry.appendMessage(
-        {
-          conversation_id,
-          role: ASSISTANT_ROLE,
-          content: prose,
-          token_usage: usage,
-          owner_id,
-        },
-        tx
-      );
-      await dispatch(markers, { conversation_id, owner_id, tx });
-      const result = await tx.query(
-        `SELECT status FROM conversations
-           WHERE id = $1 AND owner_id = $2`,
-        [conversation_id, owner_id]
-      );
-      return result.rows[0].status;
-    });
+    const { status: finalStatus, sessionAfter } = await pantry.transaction(
+      async (tx) => {
+        await pantry.appendMessage(
+          {
+            conversation_id,
+            role: ASSISTANT_ROLE,
+            content: prose,
+            token_usage: usage,
+            owner_id,
+          },
+          tx
+        );
+        await dispatch(markers, { conversation_id, owner_id, tx });
+        // Per WO-310.9c §D.5: increment demo_sessions.turns_used in the
+        // SAME transaction as the assistant-message insert. Partial
+        // commits would create drift between conversation state and
+        // session state.
+        const updatedSession = await pantryDemo.incrementSessionTurns(
+          req.demoSession.id,
+          tx
+        );
+        const result = await tx.query(
+          `SELECT status FROM conversations
+             WHERE id = $1 AND owner_id = $2`,
+          [conversation_id, owner_id]
+        );
+        return { status: result.rows[0].status, sessionAfter: updatedSession };
+      }
+    );
 
     log({
       level: 'info',
@@ -123,6 +162,11 @@ export default async function converse(req, res) {
       conversation_id,
       reply: { role: ASSISTANT_ROLE, content: prose },
       status: finalStatus,
+      demoSession: {
+        turnsUsed: sessionAfter.turns_used,
+        turnBudget: sessionAfter.turn_budget,
+        terminalAt: sessionAfter.terminal_at,
+      },
     });
   } catch (err) {
     log({

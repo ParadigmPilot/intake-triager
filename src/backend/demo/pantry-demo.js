@@ -110,12 +110,61 @@ async function getDemoSessionById(id, tx = null) {
   return result.rows[0] ?? null;
 }
 
+/**
+ * Atomic per-session turn increment. Increments turns_used; if reaching
+ * turn_budget, also sets terminal_at = now(). Returns the updated row.
+ *
+ * Used in the same transaction as the assistant-message insert in the
+ * /converse handler — no drift between message and session state.
+ *
+ * Per WO-310.9c §D.4.
+ * @param {string} id — demo_sessions.id
+ * @param {object} tx — pg transaction handle
+ * @returns {Promise<{turns_used: number, turn_budget: number, terminal_at: string | null}>}
+ */
+async function incrementSessionTurns(id, tx) {
+  const result = await _runner(tx).query(
+    `UPDATE demo_sessions
+        SET turns_used = turns_used + 1,
+            terminal_at = CASE
+              WHEN turns_used + 1 >= turn_budget THEN now()
+              ELSE terminal_at
+            END
+      WHERE id = $1
+      RETURNING turns_used, turn_budget, terminal_at`,
+    [id]
+  );
+  return result.rows[0];
+}
+
+/**
+ * Total turns consumed across all demo sessions created in the current
+ * UTC day. Used by cost-protection-middleware for the global daily cap.
+ *
+ * The index `idx_demo_sessions_created_at` (added in WO-310.9c §D.4)
+ * supports the range scan.
+ *
+ * Per WO-310.9c §D.4.
+ * @param {object | null} tx
+ * @returns {Promise<number>}
+ */
+async function getGlobalDailyTurnCount(tx = null) {
+  const result = await _runner(tx).query(
+    `SELECT COALESCE(SUM(turns_used), 0)::INT AS total
+       FROM demo_sessions
+      WHERE created_at >= date_trunc('day', now())`
+  );
+  return result.rows[0].total;
+}
+
 export {
   insertDemoLink,
   getDemoLinkByTokenHash,
   markDemoLinkUsed,
   insertDemoSession,
   getDemoSessionById,
+  incrementSessionTurns,
+  getGlobalDailyTurnCount,
 };
 
 export default {
@@ -124,4 +173,6 @@ export default {
   markDemoLinkUsed,
   insertDemoSession,
   getDemoSessionById,
+  incrementSessionTurns,
+  getGlobalDailyTurnCount,
 };
