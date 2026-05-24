@@ -20,6 +20,7 @@
 import 'dotenv/config';
 import app from './app.js';
 import { log } from './observability.js';
+import { bootstrapSchema } from '../db/bootstrap-schema.js';
 
 const REQUIRED_ENV = ['ORG_NAME', 'CRISIS_LINE'];
 const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
@@ -29,6 +30,22 @@ if (missing.length > 0) {
     event: 'config_invalid',
     error: `Required environment variable${missing.length > 1 ? 's' : ''} unset or empty: ${missing.join(', ')}`,
   });
+  process.exit(1);
+}
+
+// Idempotent schema bootstrap. Applies src/db/schema.sql when the
+// `conversations` table is absent; no-ops otherwise. Honors gold-vision
+// v1.5 §11 (migration tooling remains a non-goal — this is bootstrap, not
+// migration). WO-310.8d / D39 reconciliation.
+try {
+  const result = await bootstrapSchema();
+  if (result.applied) {
+    log({ level: 'info', event: 'bootstrap_applied' });
+  } else {
+    log({ level: 'info', event: 'bootstrap_skipped', reason: result.reason });
+  }
+} catch (err) {
+  log({ level: 'error', event: 'bootstrap_failed', error: err.message });
   process.exit(1);
 }
 
