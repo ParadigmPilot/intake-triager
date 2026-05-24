@@ -1008,4 +1008,45 @@ Sam's GOLD-thinking ruling at Session 305.1: option (b) is GOLD — it wins on i
 
 ---
 
-_Last updated: 2026-05-14 — Cycle 307, Session 307.5 (D33 + D34 logged; cycle 307 closure trio committed; universal-TAKEAWAY adoption at 35-of-35 in-scope content slides)._
+### D35 — Vite `build.outDir` relative path is anchored to `root`, not repo root; build-log path string is misleading
+
+| Field      | Value                                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| Severity   | MINOR (build-time semantic; correctly resolved; risk is reader misinterpretation only)           |
+| Phase      | Phase 9.G (surfaced during Cycle 310 Session 310.8 WO-310.8a Render-deploy hardening pass)       |
+| Discovered | Cycle 310, Session 310.8                                                                         |
+| Status     | Reconciled (documented in `src/backend/app.js` DIST_DIR comment + this D-item)                   |
+
+**Discovery.** WO-310.8a Edit 2 introduces a production static-serving block in `src/backend/app.js` that resolves the built-frontend directory via `path.resolve(__dirname, '../../dist')` — relative to `src/backend/`, that resolves to `intake-triager/dist/`. At verification time, `npm run build` (Vite) printed its output paths as `../../dist/index.html` and `../../dist/assets/...`. Those path strings are relative to Vite's configured `root: 'src/frontend'` (set in `vite.config.js`), not relative to the repo root or the build's CWD. From `src/frontend/`, `../../dist` resolves to `intake-triager/dist/` — the same location the backend's DIST_DIR resolves to. Both ends of the contract land in the same place, but the build-log path string reads as if the bundle is being written two levels above the repo (into `hopper/dist/`). Confirming the actual landing required `ls intake-triager/dist/` and inspecting `vite.config.js`.
+
+**Concrete exposure.** A future engineer debugging a production-deploy 404 on `/` (Express returning `Cannot GET /` instead of the SPA index) might trust the Vite log line and look for `dist/` two levels up from intake-triager, conclude the path math in `app.js` is wrong, and "fix" it in the wrong direction — moving DIST_DIR off the actual bundle location and breaking the deploy. The risk is misdirection, not a current defect.
+
+**Reconciliation target.** Documentation-only. The `app.js` comment block introduced by WO-310.8a Edit 2 already documents the math ("Vite builds the React frontend to `<repo-root>/dist/`. From `src/backend/`, that is two levels up. Resolved once at module load."). This D-item supplements that comment with the Vite-side context — that `build.outDir` is anchored to the configured `root`, not the repo root, and that the build-log paths read accordingly. No code change required; understanding both sides of the contract is the reconciliation. **Optional codification candidate** (Cycle 311+): add a one-line comment to `vite.config.js` explaining the `outDir` relative-to-root convention so the Vite side carries the same context as the Express side.
+
+**Status.** Reconciled at discovery (no defect; documentation now exists on both sides of the contract). Optional `vite.config.js` comment addition deferred to Cycle 311+ as a backlog candidate.
+
+---
+
+### D36 — Same-origin CORS verification path used in WO-310.8a local validation
+
+| Field      | Value                                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| Severity   | MINOR (operational note; matches pre-identified WO discovery risk #5)                            |
+| Phase      | Phase 9.G (surfaced during Cycle 310 Session 310.8 WO-310.8a local verification)                 |
+| Discovered | Cycle 310, Session 310.8                                                                         |
+| Status     | Open (full cross-origin verification deferred to first hosted-deploy smoke test)                 |
+
+**Discovery.** Once `NODE_ENV=production` and the Express server serves the built SPA from the same port that handles `/converse`, the production posture is same-origin: the browser fetches `/converse` from the same host that served the SPA, so the request carries no `Origin` header (or carries one matching `Host`, depending on browser) and the CORS middleware's allow-list is not consulted on the hot path. Local verification at WO-310.8a Edit 2 used plain `curl` without an explicit `-H "Origin: ..."` header — equivalent to same-origin, exercising the static-serve + catch-all + `/converse` route precedence but NOT exercising `CORS_ALLOWED_ORIGINS` enforcement. That gap is by design: the WO's pre-identified discovery risk #5 anticipated it and asked that the verification path used be logged here.
+
+**Concrete exposure.** Two follow-on verifications remain unexercised by local WO-310.8a execution and must be confirmed in the hosted-deploy runbook:
+
+1. **Cross-origin reject** — from an explicit foreign origin (e.g., `curl -H "Origin: https://evil.example.com" -X POST https://intake-triager.onrender.com/converse`), the CORS middleware should reject the response without CORS headers. Verify the first time the service is live on Render.
+2. **DNS-cutover re-allow** — when Cycle 311 cuts DNS to `demo.restaurantpattern.com`, the `CORS_ALLOWED_ORIGINS` env var must be updated to the new public host (via Render dashboard, since the render.yaml value is overridden at runtime). If missed, the production SPA on the new host would be served same-origin (no CORS check) but any cross-origin client tooling would silently break.
+
+**Reconciliation target.** Capture both verifications in the 310.8 checkpoint Runbook section as post-deploy smoke-test items. No code change required — the CORS middleware is already in place and exercised by the unit suite (`test/cors.test.js`, 9 tests). The gap is purely the integration-level cross-origin path, which is testable only against the running service.
+
+**Status.** Open. Verification deferred to the first hosted-deploy smoke test (310.8 runbook scope, not this WO).
+
+---
+
+_Last updated: 2026-05-23 — Cycle 310, Session 310.8 (D35 + D36 logged from WO-310.8a Render-deploy hardening pass; intake-triager deploy-ready as Render Web Service per render.yaml at repo root)._

@@ -1,0 +1,47 @@
+# Render IaC blueprint for intake-triager.
+#
+# Spec reference: https://render.com/docs/blueprint-spec
+#
+# Provisions:
+#   - One Node Web Service (Express backend + built Vite frontend, single service)
+#   - One free Postgres instance (90-day expiration; Cycle 311+ migrates to paid)
+#
+# Secrets (ANTHROPIC_API_KEY, ORG_NAME, CRISIS_LINE) are set in the Render
+# dashboard, not here — note `sync: false` per Render's blueprint spec.
+# DATABASE_URL is auto-populated from the linked Postgres service.
+
+services:
+  - type: web
+    name: intake-triager
+    runtime: node
+    region: virginia
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MODEL
+        value: claude-sonnet-4-20250514
+      - key: RATE_LIMIT_PER_IP_PER_MINUTE
+        value: "20"
+      - key: CONVERSATION_TOKEN_CEILING
+        value: "200000"
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://intake-triager.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: intake-triager-db
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ORG_NAME
+        sync: false
+      - key: CRISIS_LINE
+        sync: false
+
+databases:
+  - name: intake-triager-db
+    region: virginia
+    plan: free

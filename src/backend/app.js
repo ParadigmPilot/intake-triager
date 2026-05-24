@@ -22,11 +22,21 @@
 // .env loaded into process.env before any module that reads it (build-discovery D12).
 import 'dotenv/config';
 import express from 'express';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { corsMiddleware } from './security/cors.js';
 import { rateLimit } from './security/rate-limit.js';
 import { inputValidation } from './security/input-validation.js';
 import converse from './converse.js';
+
+// ESM __dirname shim — repo lacks CommonJS __dirname; resolved at module load.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Vite builds the React frontend to <repo-root>/dist/. From src/backend/, that
+// is two levels up. Resolved once at module load.
+const DIST_DIR = path.resolve(__dirname, '../../dist');
 
 const DEMO_OWNER_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -47,5 +57,21 @@ app.post(
   identityStub,
   converse
 );
+
+// Production-only: serve built Vite frontend from dist/ and SPA-fallback to
+// index.html for any non-API GET (so deep-links into the SPA resolve correctly).
+// Mounted AFTER /converse so the API route wins on POST /converse. The static
+// middleware will not intercept POST. The catch-all uses Express 4 wildcard
+// syntax ('*'); Express 4 is locked in package.json (^4.21.2).
+//
+// In development, Vite's own dev server (port 5173) serves the frontend; this
+// block is intentionally skipped so concurrently-orchestrated dev mode behaves
+// as before.
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(DIST_DIR));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
 
 export default app;
