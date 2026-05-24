@@ -13,6 +13,12 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    // Dev-only: route /converse from Vite (5173) to Express (3000). In
+    // production, Express serves the built SPA + the API at the same
+    // origin (WO-310.8a), so this proxy is irrelevant. Per WO-310.8c.
+    proxy: {
+      '/converse': 'http://localhost:3000',
+    },
   },
   build: {
     outDir: '../../dist',
