@@ -4,6 +4,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { loadManifest } from '../../src/substrate/manifest-loader.js';
+import { STATES } from '../../src/substrate/state-machine.js';
+import { manifests } from '../../src/substrate/manifests/index.js';
 
 // Minimal valid manifest fixture — all seven D-WS1-6 fields present.
 // Content values are illustrative; structural validation is the only contract
@@ -72,4 +74,25 @@ describe('manifest-loader', () => {
     // Error names the specific missing field for actionability.
     expect(() => loadManifest('take_the_order', manifests)).toThrow(/up_next/);
   });
+});
+
+describe('manifest-loader: seven canonical states', () => {
+  const requiredFields = [
+    'restaurant_label',
+    'technology_label',
+    'animation_asset',
+    'plain_english',
+    'in_code',
+    'just_finished',
+    'up_next',
+  ];
+
+  for (const stateId of Object.values(STATES)) {
+    it(`loads manifest for "${stateId}" with all seven required fields`, () => {
+      const manifest = loadManifest(stateId, manifests);
+      for (const field of requiredFields) {
+        expect(manifest).toHaveProperty(field);
+      }
+    });
+  }
 });
