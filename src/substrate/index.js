@@ -12,3 +12,4 @@
 export { createStateMachine } from './state-machine.js';
 export { createEventStream } from './event-stream.js';
 export { loadManifest } from './manifest-loader.js';
+export { validateContent } from './content-validator.js';
