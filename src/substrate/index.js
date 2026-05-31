@@ -9,7 +9,11 @@
 //
 // See ./README.md for the contract spec and consumer orientation.
 
+/** @see ./HOOK_CONTRACT.md */
 export { createStateMachine } from './state-machine.js';
+/** @see ./HOOK_CONTRACT.md */
 export { createEventStream } from './event-stream.js';
+/** @see ./HOOK_CONTRACT.md */
 export { loadManifest } from './manifest-loader.js';
+/** @see ./HOOK_CONTRACT.md */
 export { validateContent } from './content-validator.js';
