@@ -15,6 +15,23 @@
 // the responsibility of ./event-stream.js (next WO); this module only tracks
 // the active set.
 
+/**
+ * Facade object returned by {@link createStateMachine}.
+ *
+ * @typedef {Object} StateMachine
+ * @property {(stepId: string) => void} startStep - Begin a Service step. Adds stepId to the active set. Removes 'at_the_table' if it was present.
+ * @property {(stepId: string) => void} endStep - End a Service step. Removes stepId from the active set. Restores 'at_the_table' when no Service steps remain active.
+ * @property {() => Set<string>} getActiveSteps - Returns a frozen snapshot of the currently active step IDs.
+ * @property {(stepId: string) => boolean} isActive - True if the given stepId is in the active set.
+ * @property {() => void} reset - Returns the machine to the initial state (only 'at_the_table' active).
+ */
+
+/**
+ * The canonical seven-state set: six Service steps plus the `at_the_table`
+ * idle/initial state. Frozen at module load.
+ *
+ * @see ./HOOK_CONTRACT.md
+ */
 export const STATES = Object.freeze({
   AT_THE_TABLE:     'at_the_table',
   TAKE_THE_ORDER:   'take_the_order',
@@ -38,6 +55,23 @@ function frozenSet(source) {
   return Object.freeze(s);
 }
 
+/**
+ * Constructs a new state machine instance tracking the set of currently
+ * active Service steps. Initial active set: only `at_the_table`.
+ *
+ * Concurrency model: set-of-active-steps (D-WS1-4). Multiple Service steps
+ * may be active simultaneously. Event emission is the responsibility of
+ * {@link createEventStream}; this module only tracks state.
+ *
+ * @returns {StateMachine} A frozen facade exposing the public surface.
+ * @throws {Error} If startStep is called for an unknown step ID, an
+ *   already-active step ID, or 'at_the_table' (which is implicit-idle, not
+ *   a step that can be started).
+ * @throws {Error} If endStep is called for an unknown step ID, an inactive
+ *   step ID, or 'at_the_table'.
+ *
+ * @see ./HOOK_CONTRACT.md
+ */
 export function createStateMachine() {
   // Initial active set: only at_the_table (D-WS1-5).
   let active = new Set([STATES.AT_THE_TABLE]);

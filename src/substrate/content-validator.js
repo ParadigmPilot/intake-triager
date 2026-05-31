@@ -54,6 +54,41 @@ const ALLOWED_UP_NEXT_VERBS = Object.freeze([
 // separator between the verb phrase and the "why" clause in up_next.
 const UP_NEXT_EM_DASH_SEPARATOR = ' — ';
 
+/**
+ * A single content-rule violation surfaced by {@link validateContent}.
+ *
+ * @typedef {Object} Diagnostic
+ * @property {string} rule - Short rule identifier (e.g., 'order-turn-dual-frame', 'up-next-verb-shape').
+ * @property {string} stepId - The stepId the violation belongs to.
+ * @property {string} field - The manifest field where the violation was found.
+ * @property {string} message - Human-readable description of the violation.
+ */
+
+/**
+ * Validates a manifest's content against the §5.1 content rules per
+ * `station-architecture-scoping-document.md` v1.2. Advisory — returns
+ * diagnostics; does NOT throw on content violations.
+ *
+ * Argument-shape errors (programmer errors) DO throw TypeError. This
+ * distinction is intentional: content violations are recoverable authoring
+ * mistakes; argument-shape errors are calling-convention bugs.
+ *
+ * Rules currently enforced:
+ *   - Order/Turn dual-frame (Restaurant-frame fields forbid "turn"; Technology-frame fields forbid "order")
+ *   - up_next verb-shape ("Next: <Verb> ... — ..." with verb from a fixed allowlist)
+ *
+ * Rules scaffolded as `it.todo` pending vocabulary canon:
+ *   - frame-sealing (requires Restaurant-frame + technology-frame allowlists)
+ *   - in_code operations-not-frameworks (requires framework denylist)
+ *
+ * @param {import('./manifest-loader.js').Manifest} manifest - The manifest to validate.
+ * @param {string} stepId - The stepId the manifest belongs to (echoed into each Diagnostic).
+ * @returns {Diagnostic[]} Empty array = clean; non-empty array = one or more content violations.
+ * @throws {TypeError} If `manifest` is not a plain object (null, array, or non-object).
+ * @throws {TypeError} If `stepId` is not a non-empty string.
+ *
+ * @see ./HOOK_CONTRACT.md
+ */
 export function validateContent(manifest, stepId) {
   if (
     manifest === null ||
