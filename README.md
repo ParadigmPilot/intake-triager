@@ -385,6 +385,14 @@ The single producer of structured logs is `src/backend/observability.js`, which 
 
 Boot emits `server_listening` from `src/backend/server.js`. Production-grade observability — metrics, distributed tracing, log aggregation, request correlation, error reporting — is taught in *Implementing Standards for LLM Apps*.
 
+## Pattern-in-Motion substrate
+
+This repository hosts a small substrate at `src/substrate/` that emits `step_started` and `step_ended` events as the seven Service steps begin and end during a turn. The substrate is the engine for the **Pattern-in-Motion overlay** — an optional animated mnemonic component published separately at [`pattern-in-motion-overlay`](https://github.com/ParadigmPilot/pattern-in-motion-overlay).
+
+Consumers integrating against the substrate read the canonical contract at [`pattern-in-motion-overlay/CONTRACT.md`](https://github.com/ParadigmPilot/pattern-in-motion-overlay/blob/main/CONTRACT.md). Per-export signatures are at [`pattern-in-motion-overlay/SIGNATURES.md`](https://github.com/ParadigmPilot/pattern-in-motion-overlay/blob/main/SIGNATURES.md). The contract was relocated to the overlay repository at Cycle 313 breakout 313.3.a; `src/substrate/HOOK_CONTRACT.md` in this repository is a redirect stub.
+
+The substrate is independent of intake-triager's intake/triage logic. Trainees working through the Restaurant pattern can safely ignore it; it exists to demonstrate that the overlay is genuinely detachable from the reference implementation.
+
 ## License
 
 Apache-2.0.
