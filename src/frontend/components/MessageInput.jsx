@@ -19,20 +19,38 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-export default function MessageInput({ onSend, terminal, pending }) {
+export default function MessageInput({
+  onSend,
+  terminal,
+  pending,
+  controlsLocked = false,
+  onLockedSend,
+}) {
   const [content, setContent] = useState('');
   const inputRef = useRef(null);
 
-  const disabled = terminal || pending;
+  // The text field is frozen while a turn is in progress (terminal /
+  // pending / a composition-driven control lock). `controlsLocked` is the
+  // generic lock the pattern-in-motion composition asserts during the walk
+  // (WO-315.3b) — overlay-agnostic; the pure clone never sets it.
+  const fieldDisabled = terminal || pending || controlsLocked;
   const trimmed = content.trim();
-  const canSubmit = !disabled && trimmed.length > 0;
+  const canSubmit = !fieldDisabled && trimmed.length > 0;
 
   useEffect(() => {
-    if (!disabled) inputRef.current?.focus();
-  }, [disabled]);
+    if (!fieldDisabled) inputRef.current?.focus();
+  }, [fieldDisabled]);
 
   function handleSubmit(event) {
     event.preventDefault();
+    // While locked, the single Send control advances rather than submits
+    // (Send-only surface, D-WS2-23). MessageInput does not know what
+    // "advance" means — it reports the locked Send press, and the
+    // composition maps it (manual: step; automatic: play). Generic seam.
+    if (controlsLocked) {
+      onLockedSend?.();
+      return;
+    }
     if (!canSubmit) return;
     onSend(trimmed);
     setContent('');
@@ -42,7 +60,9 @@ export default function MessageInput({ onSend, terminal, pending }) {
     ? 'Conversation ended.'
     : pending
       ? 'Sending…'
-      : 'Tell me what happened.';
+      : controlsLocked
+        ? 'Input locked.'
+        : 'Tell me what happened.';
 
   return (
     <form onSubmit={handleSubmit}>
@@ -52,10 +72,10 @@ export default function MessageInput({ onSend, terminal, pending }) {
         value={content}
         onChange={(event) => setContent(event.target.value)}
         placeholder={placeholder}
-        disabled={disabled}
+        disabled={fieldDisabled}
         autoFocus
       />
-      <button type="submit" disabled={!canSubmit}>
+      <button type="submit" disabled={controlsLocked ? false : !canSubmit}>
         Send
       </button>
     </form>

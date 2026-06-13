@@ -24,7 +24,14 @@ import { createStateMachine, createEventStream } from '../../substrate/index.js'
 const BACKEND_URL = '/converse';
 const GENERIC_ERROR = 'we had a problem recording this — please try again';
 
-export default function App({ substrate } = {}) {
+export default function App({
+  substrate,
+  onTurnSubmitted,
+  onTurnResponded,
+  onTurnFailed,
+  controlsLocked,
+  onLockedSend,
+} = {}) {
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [terminal, setTerminal] = useState(false);
@@ -50,6 +57,12 @@ export default function App({ substrate } = {}) {
     setPending(true);
     setError(null);
 
+    // Generic lifecycle announcement (WO-315.3b): the turn has begun. A
+    // composition (overlay side) starts the pattern-in-motion walk from
+    // here. No-op when no consumer is attached (pure clone). intake-triager
+    // knows nothing of the overlay, the gate, or the six Service steps.
+    onTurnSubmitted?.();
+
     const body = conversationId
       ? { conversation_id: conversationId, content }
       : { content };
@@ -65,11 +78,17 @@ export default function App({ substrate } = {}) {
 
       if (!response.ok) {
         setError(data?.error?.message ?? GENERIC_ERROR);
+        onTurnFailed?.();
         return;
       }
 
       setConversationId(data.conversation_id);
       setMessages((prev) => [...prev, data.reply]);
+
+      // The reply prose for the Step-05 overlay→prose swap. The substrate
+      // event stream is sealed to events-only (A2 contract carries no
+      // payload), so the prose is announced out of band, here.
+      onTurnResponded?.(data.reply.content);
 
       if (data.status === 'complete' || data.status === 'escalated') {
         setTerminal(true);
@@ -77,6 +96,7 @@ export default function App({ substrate } = {}) {
       }
     } catch {
       setError(GENERIC_ERROR);
+      onTurnFailed?.();
     } finally {
       setPending(false);
     }
@@ -91,7 +111,13 @@ export default function App({ substrate } = {}) {
       )}
       {error && <div className="banner banner-error">{error}</div>}
       <Transcript messages={messages} />
-      <MessageInput onSend={handleSend} terminal={terminal} pending={pending} />
+      <MessageInput
+        onSend={handleSend}
+        terminal={terminal}
+        pending={pending}
+        controlsLocked={controlsLocked}
+        onLockedSend={onLockedSend}
+      />
     </>
   );
 }
