@@ -1,13 +1,11 @@
 // React entry. Loaded by index.html as a module script.
-// Per intake-triager-gold-vision.md v1.5 §4 Restaurant map (line 115),
-// the Dining Room root is App.jsx; this file does nothing but mount it.
+// Per WO-315.3a: the Dining Room is mounted via mountApp (./mount-app.jsx),
+// which constructs intake-triager's own substrate, injects the stream into
+// App, and returns it. The pure entry ignores the return value — a standalone
+// intake-triager clone drives its substrate but exposes it to no overlay.
+// Composition (subscribing the overlay) happens only at the hopper publish
+// layer, never here (P-9: cloneable source stays overlay-free).
 
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './components/App.jsx';
+import { mountApp } from './mount-app.jsx';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+mountApp(document.getElementById('root'));
