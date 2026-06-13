@@ -31,6 +31,7 @@ export default function App({
   onTurnFailed,
   controlsLocked,
   onLockedSend,
+  hideLatestAssistant,
 } = {}) {
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -110,7 +111,7 @@ export default function App({
         </div>
       )}
       {error && <div className="banner banner-error">{error}</div>}
-      <Transcript messages={messages} />
+      <Transcript messages={messages} hideLatestAssistant={hideLatestAssistant} />
       <MessageInput
         onSend={handleSend}
         terminal={terminal}
