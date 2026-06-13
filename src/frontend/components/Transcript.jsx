@@ -13,10 +13,23 @@ const ROLE_LABEL = {
   assistant: 'Taylor',
 };
 
-export default function Transcript({ messages }) {
+export default function Transcript({ messages, hideLatestAssistant = false }) {
+  // During a Manual pattern-in-motion walk, the just-arrived assistant reply
+  // is withheld from the transcript until the visitor reaches Step 05, where
+  // the overlay shows the prose (D-WS2-13). The composition asserts
+  // `hideLatestAssistant` for that window; the reply joins history when it
+  // clears. Generic + dormant — the pure clone never sets it.
+  const lastIndex = messages.length - 1;
+  const visible =
+    hideLatestAssistant &&
+    lastIndex >= 0 &&
+    messages[lastIndex].role === 'assistant'
+      ? messages.slice(0, lastIndex)
+      : messages;
+
   return (
     <div className="transcript">
-      {messages.map((message, index) => (
+      {visible.map((message, index) => (
         <div
           key={index}
           className={`message message-${message.role}`}
