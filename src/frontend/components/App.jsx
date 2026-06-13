@@ -16,20 +16,32 @@
 // Express at :3000), vite.config.js server.proxy routes /converse to the
 // Express port (WO-310.8c).
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Transcript from './Transcript.jsx';
 import MessageInput from './MessageInput.jsx';
+import { createStateMachine, createEventStream } from '../../substrate/index.js';
 
 const BACKEND_URL = '/converse';
 const GENERIC_ERROR = 'we had a problem recording this — please try again';
 
-export default function App() {
+export default function App({ substrate } = {}) {
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [terminal, setTerminal] = useState(false);
   const [terminalReason, setTerminalReason] = useState(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
+
+  // Pattern-in-Motion substrate (WO-315.3a). App owns its substrate event
+  // stream — injected by mountApp, or self-constructed for a bare <App />
+  // (clone-safe). Constructed once via the lazy-ref pattern so it survives
+  // re-renders and StrictMode. Held here for the turn-driver (successor WO)
+  // to advance; exposed to the overlay only via mountApp's return at the
+  // hopper publish layer. intake-triager never imports the overlay.
+  const substrateRef = useRef(null);
+  if (substrateRef.current === null) {
+    substrateRef.current = substrate ?? createEventStream(createStateMachine());
+  }
 
   async function handleSend(content) {
     // Optimistic append — the server inserts the user row before any
