@@ -28,6 +28,7 @@ export default function MessageInput({
 }) {
   const [content, setContent] = useState('');
   const inputRef = useRef(null);
+  const advanceRef = useRef(null);
 
   // The text field is frozen while a turn is in progress (terminal /
   // pending / a composition-driven control lock). `controlsLocked` is the
@@ -40,6 +41,17 @@ export default function MessageInput({
   useEffect(() => {
     if (!fieldDisabled) inputRef.current?.focus();
   }, [fieldDisabled]);
+
+  // Keyboard advance (WO-316.2c): when the composition locks the controls for
+  // the walk, move focus to the Send control so it advances on Enter — the
+  // learner walks steps 02-06 without the mouse. The input is disabled while
+  // locked (it cannot hold focus), so focus would otherwise fall to <body> and
+  // Enter would do nothing. The unlock side (refocus the input when the lock
+  // clears) is the effect above. The pure clone never sets controlsLocked, so
+  // this is inert there.
+  useEffect(() => {
+    if (controlsLocked) advanceRef.current?.focus();
+  }, [controlsLocked]);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -75,7 +87,11 @@ export default function MessageInput({
         disabled={fieldDisabled}
         autoFocus
       />
-      <button type="submit" disabled={controlsLocked ? false : !canSubmit}>
+      <button
+        ref={advanceRef}
+        type="submit"
+        disabled={controlsLocked ? false : !canSubmit}
+      >
         Send
       </button>
     </form>
