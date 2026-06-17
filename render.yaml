@@ -23,7 +23,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: MODEL
-        value: claude-sonnet-4-20250514
+        value: claude-sonnet-4-6
       - key: RATE_LIMIT_PER_IP_PER_MINUTE
         value: "20"
       - key: CONVERSATION_TOKEN_CEILING
