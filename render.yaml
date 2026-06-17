@@ -16,7 +16,7 @@ services:
     runtime: node
     region: virginia
     plan: free
-    buildCommand: npm install --include=dev && npm install --no-save github:ParadigmPilot/pattern-in-motion-overlay#295134b1020fe986940fa953f88e23b04de4b307 && npm run build
+    buildCommand: npm install --include=dev && npm install --no-save --include=dev github:ParadigmPilot/pattern-in-motion-overlay#295134b1020fe986940fa953f88e23b04de4b307 && npm run build
     startCommand: npm start
     autoDeploy: true
     envVars:
