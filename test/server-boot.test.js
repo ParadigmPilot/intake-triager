@@ -77,6 +77,9 @@ describe('server.js boot-time validation', () => {
     // WO-310.9b: REQUIRED_ENV gained TURNSTILE_SECRET_KEY. Same posture
     // as the 9a keys — seeded so the success path reaches app.listen.
     process.env.TURNSTILE_SECRET_KEY = 'test-turnstile-secret';
+    // WO-316.4a: REQUIRED_ENV gained OWNER_ID (single-source demo owner_id).
+    // Same posture — seeded so the success path reaches app.listen.
+    process.env.OWNER_ID = '00000000-0000-0000-0000-000000000001';
   });
 
   afterEach(() => {
