@@ -32,6 +32,8 @@ services:
         value: "200000"
       - key: CORS_ALLOWED_ORIGINS
         value: https://intake-triager.onrender.com
+      - key: ISSUE_LINK_CORS_ORIGINS
+        value: https://restaurantpattern.com,https://www.restaurantpattern.com,https://restaurant-pattern-site.onrender.com
       - key: DATABASE_URL
         fromDatabase:
           name: intake-triager-db

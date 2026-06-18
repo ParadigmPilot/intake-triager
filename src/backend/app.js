@@ -56,18 +56,19 @@ const __dirname = path.dirname(__filename);
 // is two levels up. Resolved once at module load.
 const DIST_DIR = path.resolve(__dirname, '../../dist');
 
-// Path-scoped CORS for /api/demo/issue-link. The public marketing site
-// (restaurantpattern.com, www.restaurantpattern.com) and local Astro
-// dev servers POST the visitor's email here; the response carries no
-// cookies and the request needs no credentials, so credentials: false.
-// Restricted to this single path — the global corsMiddleware() still
-// governs every other route.
-const ISSUE_LINK_CORS_ORIGINS = [
-  'https://restaurantpattern.com',
-  'https://www.restaurantpattern.com',
-  'http://localhost:4321',
-  'http://localhost:5173',
-];
+// Path-scoped CORS for /api/demo/issue-link. The public marketing site and
+// local Astro dev servers POST the visitor's email here; the response carries
+// no cookies and the request needs no credentials, so credentials: false.
+// Restricted to this single path — the global corsMiddleware() still governs
+// every other route.
+//
+// Origins are config, not code (WO-316.4b): read from ISSUE_LINK_CORS_ORIGINS
+// (comma-separated) so the staging → custom-domain cutover is a one-line env
+// edit, not a rebuild. server.js's REQUIRED_ENV guarantees it is set at boot.
+const ISSUE_LINK_CORS_ORIGINS = (process.env.ISSUE_LINK_CORS_ORIGINS ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 const issueLinkCors = cors({
   origin: ISSUE_LINK_CORS_ORIGINS,
   methods: ['POST', 'GET', 'OPTIONS'],
