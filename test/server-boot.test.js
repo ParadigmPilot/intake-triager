@@ -80,6 +80,9 @@ describe('server.js boot-time validation', () => {
     // WO-316.4a: REQUIRED_ENV gained OWNER_ID (single-source demo owner_id).
     // Same posture — seeded so the success path reaches app.listen.
     process.env.OWNER_ID = '00000000-0000-0000-0000-000000000001';
+    // WO-316.4b: REQUIRED_ENV gained ISSUE_LINK_CORS_ORIGINS (config-driven
+    // issuance CORS). Same posture — seeded so the success path reaches app.listen.
+    process.env.ISSUE_LINK_CORS_ORIGINS = 'http://localhost:4321,http://localhost:5173';
   });
 
   afterEach(() => {
