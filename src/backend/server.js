@@ -29,6 +29,7 @@ const REQUIRED_ENV = [
   'RESEND_FROM_ADDRESS',
   'MAGIC_LINK_SECRET',
   'TURNSTILE_SECRET_KEY',
+  'OWNER_ID',
 ];
 const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
 if (missing.length > 0) {

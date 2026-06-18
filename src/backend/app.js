@@ -56,8 +56,6 @@ const __dirname = path.dirname(__filename);
 // is two levels up. Resolved once at module load.
 const DIST_DIR = path.resolve(__dirname, '../../dist');
 
-const DEMO_OWNER_ID = '00000000-0000-0000-0000-000000000001';
-
 // Path-scoped CORS for /api/demo/issue-link. The public marketing site
 // (restaurantpattern.com, www.restaurantpattern.com) and local Astro
 // dev servers POST the visitor's email here; the response carries no
@@ -77,8 +75,12 @@ const issueLinkCors = cors({
   credentials: false,
 });
 
+// Demo identity (single source of truth): the demo owner_id comes from the
+// OWNER_ID env var — the same value issuance reads (issue-link.js) and that
+// render.yaml pins. server.js's REQUIRED_ENV guarantees it is present at boot,
+// so reading it per-request here cannot be undefined (WO-316.4a).
 function identityStub(req, res, next) {
-  req.user = { id: DEMO_OWNER_ID };
+  req.user = { id: process.env.OWNER_ID };
   next();
 }
 
