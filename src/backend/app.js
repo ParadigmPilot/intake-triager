@@ -87,9 +87,17 @@ function identityStub(req, res, next) {
 
 const app = express();
 
-app.use(corsMiddleware());
-app.use(cookieParser());
-
+// /api/demo/issue-link is registered BEFORE the global corsMiddleware() so its
+// path-scoped issueLinkCors governs the route end to end (WO-316.5a). The global
+// CORS (CORS_ALLOWED_ORIGINS) does not include the marketing site, and the `cors`
+// package answers an OPTIONS preflight itself, ending the response
+// (preflightContinue defaults to false). If the global middleware ran first it
+// would terminate the preflight WITHOUT an Access-Control-Allow-Origin header and
+// the browser would block the issuance POST. Registering this route first lets
+// issueLinkCors answer the preflight — and stamp the POST response — for the
+// ISSUE_LINK_CORS_ORIGINS marketing origins; corsMiddleware() below still governs
+// every other route.
+//
 // POST /api/demo/issue-link — magic-link issuance. Path-scoped CORS,
 // rate-limited (reuses the per-IP cap that already governs /converse),
 // JSON body. No demo-session gate (issuance is how visitors acquire a
@@ -112,6 +120,9 @@ app.post(
   disposableEmailMiddleware,
   issueLinkHandler
 );
+
+app.use(corsMiddleware());
+app.use(cookieParser());
 
 // GET /api/demo/verify — magic-link click. No rate-limit (issuance
 // already enforces a per-IP cap, and clicks are bounded by the
