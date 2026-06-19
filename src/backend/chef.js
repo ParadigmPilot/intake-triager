@@ -3,7 +3,11 @@
 // Per intake-triager-gold-vision.md v1.5 §4 *Chef public API*.
 // Single-call wrapper around @anthropic-ai/sdk Messages API, with bounded
 // retry on transient upstream failures (WO-316.5b — "Premature close").
-// Non-streaming. Reads MODEL from env (default claude-sonnet-4-20250514).
+// Streamed via messages.stream().finalMessage() (WO-316.5c): bytes flow
+// continuously so a long, otherwise-silent request is not dropped mid-body by an
+// idle-connection timeout in the network path ("Premature close"). Resolves to
+// the same complete Message → unchanged {text, usage}. Reads MODEL from env
+// (default claude-sonnet-4-20250514).
 // Takes the array from assemblePrompt; returns {text, usage}.
 //
 // Briefing array shape: [{role: 'system', content}, {role, content}, ...]
@@ -64,7 +68,7 @@ export async function cook(briefing) {
   let response;
   for (let attempt = 1; ; attempt += 1) {
     try {
-      response = await client.messages.create(request);
+      response = await client.messages.stream(request).finalMessage();
       break;
     } catch (err) {
       if (attempt >= MAX_ATTEMPTS || !isTransient(err)) throw err;
