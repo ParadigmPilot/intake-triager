@@ -25,6 +25,8 @@ export default function MessageInput({
   pending,
   controlsLocked = false,
   onLockedSend,
+  formClassName = '',
+  inputClassName = '',
 }) {
   const [content, setContent] = useState('');
   const inputRef = useRef(null);
@@ -77,10 +79,11 @@ export default function MessageInput({
         : 'Tell me what happened.';
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className={formClassName || undefined}>
       <input
         ref={inputRef}
         type="text"
+        className={inputClassName || undefined}
         value={content}
         onChange={(event) => setContent(event.target.value)}
         placeholder={placeholder}

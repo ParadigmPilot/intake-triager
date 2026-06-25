@@ -216,10 +216,27 @@ function ComposedView() {
           </div>
         </div>
 
-        {/* Zone 2 — Scroll region: the idle welcome, the live walk block, and
-            the host App (transcript + input). */}
-        <div className="composed-scroll">
-          <div className="chat">
+        {/* Zones 2 + 3 — App owns transcript + input; the composer places them:
+            transcript + banners ride the scroll region (Zone 2); the input pins
+            to the .control-bar footer (Zone 3). Welcome + live-block are
+            composer-owned and ride the scroll region above the transcript. App's
+            render-prop returns a fragment, so .composed-scroll and the footer
+            become direct flex children of .composed. */}
+        <App
+          substrate={stream}
+          onTurnSubmitted={onTurnSubmitted}
+          onTurnResponded={onTurnResponded}
+          onTurnFailed={onTurnFailed}
+          controlsLocked={started}
+          onLockedSend={nextStep}
+          hideLatestAssistant={started}
+          formClassName="control-bar"
+          inputClassName="intake-input"
+        >
+          {({ banners, transcript, footer }) => (
+            <>
+              <div className="composed-scroll">
+                <div className="chat">
             {!everSubmitted && (
               <div className="composed-welcome">
                 <h2 className="composed-welcome-title">
@@ -269,20 +286,18 @@ function ComposedView() {
               </div>
             )}
 
-            {/* The real host: transcript + input. During the walk its input is
-                locked (the locked Send press advances via onLockedSend) and the
-                just-arrived reply is withheld until the walk's Step-05 reveal. */}
-            <App
-              substrate={stream}
-              onTurnSubmitted={onTurnSubmitted}
-              onTurnResponded={onTurnResponded}
-              onTurnFailed={onTurnFailed}
-              controlsLocked={started}
-              onLockedSend={nextStep}
-              hideLatestAssistant={started}
-            />
-          </div>
-        </div>
+                  {/* The real host's transcript (banners above it). During the
+                      walk the input is locked and the just-arrived reply is
+                      withheld until the Step-05 reveal — both driven by the
+                      props passed to <App> above. */}
+                  {banners}
+                  {transcript}
+                </div>
+              </div>
+              {footer}
+            </>
+          )}
+        </App>
       </div>
 
       {/* Zone 3 — Event log (BL-13): a non-modal disclosure. Docks beside the

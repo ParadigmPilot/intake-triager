@@ -32,6 +32,9 @@ export default function App({
   controlsLocked,
   onLockedSend,
   hideLatestAssistant,
+  children,
+  formClassName = '',
+  inputClassName = '',
 } = {}) {
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -103,7 +106,11 @@ export default function App({
     }
   }
 
-  return (
+  // Composition parts (WO-317.2a). App owns conversation state (gold-vision §4);
+  // it exposes its render parts so a composer can place them in its own layout
+  // zones — banners + transcript in a scroll region, the input in a pinned
+  // footer — without App taking on any layout class itself.
+  const banners = (
     <>
       {terminal && (
         <div className="banner banner-status">
@@ -111,14 +118,38 @@ export default function App({
         </div>
       )}
       {error && <div className="banner banner-error">{error}</div>}
-      <Transcript messages={messages} hideLatestAssistant={hideLatestAssistant} />
-      <MessageInput
-        onSend={handleSend}
-        terminal={terminal}
-        pending={pending}
-        controlsLocked={controlsLocked}
-        onLockedSend={onLockedSend}
-      />
+    </>
+  );
+
+  const transcript = (
+    <Transcript messages={messages} hideLatestAssistant={hideLatestAssistant} />
+  );
+
+  const footer = (
+    <MessageInput
+      onSend={handleSend}
+      terminal={terminal}
+      pending={pending}
+      controlsLocked={controlsLocked}
+      onLockedSend={onLockedSend}
+      formClassName={formClassName}
+      inputClassName={inputClassName}
+    />
+  );
+
+  // Render-prop seam: a function child means a composer owns layout (it places
+  // banners / transcript / footer into its zones). The bare clone passes no
+  // children and renders the default flat fragment — DOM-identical to the
+  // pre-317.2 clone, so the cloneable host stays overlay-free (P-9 / A2).
+  if (typeof children === 'function') {
+    return children({ banners, transcript, footer });
+  }
+
+  return (
+    <>
+      {banners}
+      {transcript}
+      {footer}
     </>
   );
 }
