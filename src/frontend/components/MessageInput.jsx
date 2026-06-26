@@ -80,22 +80,24 @@ export default function MessageInput({
 
   return (
     <form onSubmit={handleSubmit} className={formClassName || undefined}>
-      <input
-        ref={inputRef}
-        type="text"
-        className={inputClassName || undefined}
-        value={content}
-        onChange={(event) => setContent(event.target.value)}
-        placeholder={placeholder}
-        disabled={fieldDisabled}
-        autoFocus
-      />
+      {!controlsLocked && (
+        <input
+          ref={inputRef}
+          type="text"
+          className={inputClassName || undefined}
+          value={content}
+          onChange={(event) => setContent(event.target.value)}
+          placeholder={placeholder}
+          disabled={fieldDisabled}
+          autoFocus
+        />
+      )}
       <button
         ref={advanceRef}
         type="submit"
         disabled={controlsLocked ? false : !canSubmit}
       >
-        Send
+        {controlsLocked ? 'Next Step' : 'Send'}
       </button>
     </form>
   );
