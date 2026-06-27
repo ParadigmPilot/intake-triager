@@ -1,0 +1,489 @@
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 2rem;
+  background: #fafaf7;
+  color: #1f2937;
+}
+
+header {
+  margin-bottom: 1.5rem;
+}
+
+h1 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.25rem;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+#event-log {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.875rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.event-row {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.event-row:last-child {
+  border-bottom: none;
+}
+
+.event-row.step_started {
+  color: #047857;
+}
+
+.event-row.step_ended {
+  color: #6366f1;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.run-button {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  background: #1f2937;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.run-button:hover {
+  background: #374151;
+}
+
+.run-hint {
+  margin: 0 0 1rem 0;
+  padding: 0.6rem 0.9rem;
+  background: var(--color-amber-soft);
+  border: 1px solid var(--color-amber);
+  border-radius: var(--radius-md);
+  color: var(--color-amber-deep);
+  font-size: 0.875rem;
+}
+
+.chat-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.turn-history {
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-md);
+  background: #fff;
+  overflow: hidden;
+}
+
+.turn-collapsed {
+  padding: 0.2rem 0.75rem;
+  color: var(--color-stone);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.turn-collapsed:last-child {
+  border-bottom: none;
+}
+
+/* ── Composed view (WO-315.3c2 preview) ──────────────────────────────────
+   The assembled Intake-Triager chat with the overlay inline. Uses existing
+   tokens only (no new tokens — Robin Malfait Rule). */
+.composed {
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.composed-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+/* Title group: host app name (h1) stacked over the overlay subtitle, so a
+   variable-length third-party app name keeps the full row and the subtitle
+   reads as a proper subtitle rather than a competitor on the same baseline. */
+.composed-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0; /* let a long h1 wrap/shrink instead of shoving the trigger */
+  flex: 1; /* span the band so line 2 can push the Event-log button right */
+}
+
+/* Line 2 sub-row: the applied-overlay meta on the left, the Event-log button on
+   the right (pushed by the button's own margin-left: auto). Center-aligned at
+   the row level — the meta group keeps its own internal baseline (6e). Wraps on
+   narrow: the button drops below the meta text rather than collapsing to a glyph. */
+.composed-subrow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Compact the Event-log button horizontally so the meta line + button fit on
+   one row at 380px. Horizontal only — the base rule's vertical padding (tap
+   height) is left untouched. */
+.composed-subrow .log-trigger {
+  padding-inline: 0.55rem;
+}
+
+.composed-head h1 {
+  margin: 0;
+}
+
+/* Applied-overlay label (BL-11, GOLD form): the host app name is the title; the
+   line beneath reads "with [Pattern in Motion]" — a relational "with" plus an
+   amber badge — so it reads as the overlay APPLIED to this app, not as the app's
+   own subtitle. "Preview" is a separate, muted build-state tag, kept distinct
+   from the brand badge. Amber triad + stone only; zero new tokens. */
+.composed-meta {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: var(--font-size-sm);
+}
+
+.composed-with {
+  color: var(--color-stone);
+}
+
+.composed-badge {
+  padding: 0.1rem 0.4rem;
+  background: var(--color-amber-soft);
+  border: 1px solid var(--color-amber);
+  border-radius: var(--radius-md);
+  color: var(--color-amber-deep);
+  font-weight: var(--font-weight-semibold);
+}
+
+.composed-sep {
+  color: var(--color-stone);
+}
+
+.composed-preview {
+  color: var(--color-stone);
+}
+
+/* Idle welcome surface (BL-10): the teaching beat that fills the composed view
+   before the first turn. Rendered only when history is empty and no live turn
+   is running; it clears automatically when a turn begins. Existing tokens only. */
+.composed-welcome {
+  max-width: 32rem;
+  margin: var(--space-5) auto;
+  padding: 0 var(--space-4);
+  text-align: center;
+}
+
+.composed-welcome-title {
+  margin: 0 0 var(--space-3);
+  color: var(--color-charcoal);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.composed-welcome-body {
+  margin: 0;
+  color: var(--color-stone);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: 1rem;
+}
+
+.turn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.msg {
+  max-width: 85%;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  line-height: var(--line-height-snug);
+}
+
+.msg-patron {
+  align-self: flex-end;
+  background: #1f2937;
+  color: #fff;
+}
+
+.msg-frozen {
+  opacity: 0.92;
+}
+
+.msg-assistant {
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.turn-meta-row {
+  align-self: stretch;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0.5rem;
+  color: var(--color-stone);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+}
+
+.replay-seam {
+  opacity: 0.5;
+}
+
+.turn-live {
+  gap: 0.5rem;
+}
+
+.live-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-md);
+}
+
+/* Amber emphasis lives on the steps (D-WS2-27): the Trace is the highlighted
+   element; the served answer below renders plain — identical to an archived
+   assistant bubble (the recognition beat). Amber STROKE only (no fill) so the
+   per-pill active/complete state colors are unaffected. Existing tokens only. */
+.trace--compact {
+  padding: var(--space-3);
+  border: 1px solid var(--color-amber);
+  border-radius: var(--radius-md);
+}
+
+/* Recognition line (D-WS2-27): the seam between the amber Trace (the steps) and
+   the plain served answer; narrates that the hidden steps produce the familiar
+   answer. Readable, not amber (amber is the steps). Existing tokens only. */
+.recognition-line {
+  margin: 0;
+  color: var(--color-charcoal);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+}
+
+.assistant-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 8rem; /* coarse reserved height for the preview (D-WS2-2) */
+}
+
+/* Interim Step-06 signal (WO-315.5e): copy-only line beneath the persisting
+   served prose, giving the 05 -> 06 transition a visible change. Muted, small;
+   existing tokens only. Makes no persistence/database assertion. */
+.step-six-signal {
+  margin: 0;
+  color: var(--color-stone);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+}
+
+/* Anchored control footer (WO-315.5d): direct child of the .composed flex
+   column, pinned below the scroll region so the snap-to-top never drags it. */
+.control-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.intake-input {
+  flex: 1 1 16rem;
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-sizing: border-box;
+  resize: none;
+  line-height: var(--line-height-snug);
+  overflow-y: auto;
+  max-height: 5.5rem; /* ~3 lines incl. padding; grows up to here, then scrolls */
+}
+
+.intake-input:disabled {
+  background: #f3f4f6;
+  color: var(--color-stone);
+}
+
+/* ── Composed view layout (WO-315.5b) — three zones ──────────────────────
+   Zone 1 anchored Title band; Zone 2 internal scroll region (active live step
+   snaps top-aligned on each press); Zone 3 right slide-out Event log drawer.
+   Existing tokens only (no new tokens — Robin Malfait Rule). */
+.composed {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 4rem); /* fill viewport minus the body's 2rem padding */
+}
+
+/* Zone 1 — anchored Title band (first flex item; does not scroll). */
+.composed-head {
+  flex: 0 0 auto;
+  margin-bottom: var(--space-3);
+}
+
+.log-trigger {
+  margin-left: auto;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  padding: 0.3rem 0.7rem;
+  background: #fff;
+  color: var(--color-charcoal);
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.log-trigger:hover {
+  background: #f3f4f6;
+}
+
+/* Zone 2 — scroll region (middle). */
+.composed-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  scroll-padding-top: var(--space-3);
+}
+
+.live-block {
+  scroll-margin-top: var(--space-3);
+}
+
+/* Zone 3 — Event log (BL-13): a non-modal disclosure. Narrow = a slide-over peek
+   from the right (no backdrop); wide = docked in grid column 2 (see the 64rem
+   media query below). Mobile-first: these base rules are the narrow slide-over;
+   the media query overrides to the in-flow dock. */
+.log-dock {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(22rem, 90vw);
+  height: 100%;
+  background: #fff;
+  border-left: 1px solid #e5e7eb;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  animation: drawer-in var(--transition-base);
+}
+
+@keyframes drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .log-dock {
+    animation: none;
+  }
+}
+
+.log-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.log-drawer-head h2 {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+.drawer-close {
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0 0.4rem;
+  background: none;
+  border: none;
+  color: var(--color-stone);
+  cursor: pointer;
+}
+
+.log-dock #event-log {
+  flex: 1 1 auto;
+  max-height: none;
+  border: none;
+  border-radius: 0;
+}
+
+/* Two-pane shell (BL-13): wraps the walk (.composed) and the log (.log-dock).
+   Mobile-first — at narrow it is a passthrough (walk owns the page; the log is
+   the fixed slide-over above). At >=64rem it becomes a centered two-column grid
+   and the log docks beside the walk, filling the right band that rests empty
+   today. Existing tokens only (the rem literals here are media/track sizes, not
+   design tokens). */
+@media (min-width: 64rem) {
+  .composed-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 44rem) 22rem;
+    gap: var(--space-4);
+    max-width: 68rem;
+    margin: 0 auto;
+    height: calc(100vh - 4rem);
+  }
+
+  /* The walk fills the shell row instead of owning its own viewport height, and
+     the shell (not the walk) centers the pair. */
+  .composed {
+    height: 100%;
+    margin: 0;
+  }
+
+  /* Docked, in-flow column 2 — not an overlay: no fixed position, no shadow, no
+     slide animation. A bordered panel beside the walk. */
+  .log-dock {
+    position: static;
+    width: auto;
+    height: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    animation: none;
+    overflow: hidden;
+    z-index: auto;
+  }
+}
