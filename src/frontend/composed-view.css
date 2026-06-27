@@ -378,9 +378,13 @@ h1 {
   background: #f3f4f6;
 }
 
-/* Zone 2 — scroll region (middle). */
+/* Zone 2 — scroll region (middle). min-height: 0 lets this flex child shrink
+   below its content height, so a tall transcript scrolls inside this region
+   instead of growing .composed past its fixed height and pushing the
+   .control-bar footer below the viewport (BL-15). */
 .composed-scroll {
   flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   scroll-padding-top: var(--space-3);
 }
