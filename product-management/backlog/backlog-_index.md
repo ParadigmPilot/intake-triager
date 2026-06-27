@@ -12,7 +12,7 @@ quality: TBD
 alignment: Partial
 
 # === VERSIONING FIELDS ===
-version: "1.5"
+version: "1.6"
 created: "2026-06-15"
 updated: "2026-06-25"
 owner: Sam R. Harkreader
@@ -26,15 +26,15 @@ depends_on:
 related: []
 
 # === INDEX EXTENSION FIELDS ===
-next_id: 10
-total_count: 9
+next_id: 11
+total_count: 10
 collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 # Intake Triager Backlog
 
-**Total Items:** 9  
-**Next ID:** BL-10  
+**Total Items:** 10  
+**Next ID:** BL-11  
 **Last Updated:** 2026-06-25
 
 > Index created at **session 315.8** from the first live-Render OBJ-1 validation
@@ -92,6 +92,24 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 > confirmed live; the input now pins to the `.control-bar` footer at idle.
 > **BL-4 is verified-complete but left in Captured here**, pending the cycle-317
 > validated-backlog migration pass.)*
+>
+> **v1.6 (2026-06-25):** session-317.3 — captured **BL-10** (composed-view
+> **CSS-ownership migration**), per the owner-approved Marcus Fontoura deviation
+> (baseline A-317.3-1). The host's composed-view layout CSS lives in the overlay's
+> `example/example.css` — inverted ownership (host owns the markup per P-9; the
+> overlay owns the styling, in a file labeled "example"). GOLD fix: a host
+> stylesheet owns the composed-view layout; the overlay ships only contract-
+> crossing assets (tokens + component CSS) + its own self-contained demo. The
+> migration sequences **ahead of BL-15 + BL-7** so their new CSS lands in the right
+> home (no straddle, no fix-then-move). **Move-vs-split pending the overlay
+> `example/` harness source** (if the overlay demo shares `.composed`/`.chat`/`.msg`,
+> it is a split, not a move). Pure relocation → **pixel-identical render** is the
+> pass/fail; zero new tokens. **BL-5 → migration → BL-15 → BL-7** is the revised
+> OBJ-3 order. Captured 7→8; total 9→10; `next_id` 10→11.
+>
+> _Note: BL-15 (composed-view footer overflow) lives in the **overlay** backlog
+> (overlay v1.7), captured 317.3; its fix is **re-homed host-side** by BL-10 and
+> follows the migration. Cross-referenced here, tracked there._
 
 ---
 
@@ -99,13 +117,13 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 
 | Status | Count |
 |--------|-------|
-| Captured | 7 |
+| Captured | 8 |
 | Triaged | 0 |
 | Ready | 0 |
 | Scheduled | 0 |
 | Complete | 2 |
 | Rejected | 0 |
-| **Total** | **9** |
+| **Total** | **10** |
 
 ---
 
@@ -115,11 +133,12 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 |----|------|----------|--------|
 | BL-3 | Model-deprecation early warning (human-in-the-loop): surface a deprecated/retired `MODEL` **before** it silently breaks `/converse` turns — via a boot-guard (verify model resolves at server start) **or** a scheduled deprecation check. **No automated model substitution** (supply-chain risk; Anthropic IDs are pinned snapshots). Reads `MODEL` from the single source of truth (`render.yaml`). Captured after **BL-1 recurred** in 316.3. *(Row-only per 314.4.a; the standalone item file was deleted in 316.6.)* | Medium | Cycle 316.3 (BL-1 recurrence) |
 | BL-4 | Composition layout pass — **three-zone fidelity**. `example.css` defines a clean three-zone column (Zone 1 anchored `.composed-head`; Zone 2 scroll `.composed-scroll`; Zone 3 anchored `.control-bar` footer), but `composed-view.jsx` renders `<App>` — transcript **and** `MessageInput`'s `<form>` — **inside `.chat` inside `.composed-scroll`**, so the input rides the scroll region and the `.control-bar` footer rule is **orphaned**. Live symptoms (316.6): (1) header not reliably pinned; (2) the live step block does not snap top-aligned under the header; (3) chat should sit **above** an active training block, and with none the list should bottom-scroll with **input + Send pinned to the viewport bottom** — instead the input floats / scrolls and spacing jitters. Fix is **structural in `composed-view.jsx`** (seam transcript → Zone 2, input → Zone 3/`.control-bar`), not a token change — zero new tokens (Robin Malfait Rule). Host-owned. **(Verified-complete 317.2 via WO-317.2a / PR #46 — input pins at idle on the live build; migration to Complete deferred to the cycle-317 validated-backlog pass.)** | High | Cycle 316.6 (live incognito end-to-end walk) |
-| BL-5 | Step-01 control **relabel + input hide** during the walk. While the walk is active (`controlsLocked`), the host shows a **disabled input + "Send"** — it should **hide the input** and present a **"Next Step"** button in the Send slot. The walk advances correctly (locked Send → `onLockedSend` → `gate.advance()`); the defect is **presentation only**. The earlier "Step-01 freeze" framing was wrong — nothing is frozen; the control is mislabeled. Host-owned (`composed-view.jsx` / `MessageInput.jsx`). | High | Cycle 316.4/316.6 (live eyes-on) |
-| BL-6 | Turn-2 `/converse` error — **could-not-reproduce (watch)**. During 316.6 thrashing, one second turn returned the generic banner once; a fresh incognito session then completed a full multi-turn report with no error. Suspected **session-state, not code**: most likely the demo **circuit-breaker** (`recordFailure`/`classifyError` in `converse.js`) tripped by prior failures, or that session's cost ceiling. **No fix without reproduction + a Render log line** (`converse_handler_error` vs `converse_token_ceiling_exceeded`). Captured so it is not lost; do **not** act until it recurs with evidence. Host-owned (backend). | Low | Cycle 316.6 (transient; not reproduced) |
-| BL-7 | Event-log **cumulative within a conversation** (persistent, not per-turn-ephemeral). `composed-view.jsx` clears the released-event array on each turn archive (`setEvents([])` in the `turnComplete` effect), so the "Event log" is **empty at conversation-complete** — reads as broken. **Owner directive (316.6): persistent/cumulative** across the conversation — stop wiping between turns (in-memory; no DB). The lighter in-memory choice supersedes §6's localStorage persistence (D-WS2-20). Small state fix in `composed-view.jsx`. Host-owned. | Medium | Cycle 316.6 (live; #4 owner decision — persistent) |
-| BL-8 | **Payload-surfacing** — show each step's real **per-turn** content ("this turn") beneath its fixed teaching line. The host already computes these artifacts in `converse.js` and discards them: parsed intent (take_the_order), assembled-prompt metadata (brief_the_chef), model+latency+tokens (plate_the_dish), parsed markers/tickets (read_the_ticket), served answer (serve_by_type — already shown), recorded side-effects (stock_the_pantry). **Design intent: paired, lesson-primary, payload-subordinate.** The overlay's teaching message stays primary (the lesson; constant; overlay-owned #6); the payload is a compact, visually subordinate "this turn" block beneath it (the proof; varying; host-owned). **Never replace the teaching message.** Payload weight varies per step; consider payload-on-demand if the walk crowds, but **default to showing it** (a credibility wedge must show its proof). This is the **credibility-wedge** feature (third-party-dev adoption) and is **§6's original payload-bearing replay intent** (D-WS2-17 immutable turn record) re-aimed from replay to surfacing. Est. **~½ cycle minimum-credible** (intent + markers + usage, **no raw system prompt**) to **~1 cycle full** (incl. assembled prompt — needs redaction review + an A2 `CONTRACT.md` amendment for an out-of-band payload channel). Likely **Cycle 317**. Security: never leak the system prompt / intake PII. Recommend a **cheap market probe before the full build**. Cross-cutting (host data + overlay display). | Medium | Cycle 316.6 (replay→payload reframe; credibility-wedge decision) |
-| BL-9 | **Local-build fragility — overlay package pruned by `npm install`.** `@paradigmpilot/pattern-in-motion-overlay` is installed `--no-save` (per `render.yaml`'s pinned build command), so any subsequent `npm install` prunes it from `node_modules` — the local build then fails (`composed-view.jsx`'s overlay import unresolved) until it is reinstalled. **Production is unaffected** (`render.yaml` reinstalls at build time); the fragility is **local dev/build only**. Surfaced during WO-317.2a's local build gate (316.5d's SDK bump had silently pruned it). Fix candidate: a `postinstall`/`predev` hook **or** a documented setup step so the build gate does not break out from under future WOs. **Environmental, not caused by 317.2a** (no imports touched; `main` would fail identically). Host-owned (intake-triager build tooling). | Medium | Cycle 317.2 (WO-317.2a build-gate discovery) |
+| BL-5 | Step-01 control **relabel + input hide** during the walk. While the walk is active (`controlsLocked`), the host shows a **disabled input + "Send"** — it should **hide the input** and present a **"Next Step"** button in the Send slot. The walk advances correctly (locked Send → `onLockedSend` → `gate.advance()`); the defect is **presentation only**. The earlier "Step-01 freeze" framing was wrong — nothing is frozen; the control is mislabeled. Host-owned (`composed-view.jsx` / `MessageInput.jsx`). **(Delivered 317.3a via PR #47 — input hidden + "Next Step" under lock; migration to Complete deferred to the validated-backlog pass.)** | High | Cycle 316.4/316.6 (live eyes-on) |
+| BL-6 | Turn-2 `/converse` error — **could-not-reproduce (watch)**. During 316.6 thrashing, one second turn returned the generic banner once; a fresh incognito session then completed a full multi-turn report with no error. Suspected **session-state, not code**: most likely the demo **circuit-breaker** (`recordFailure`/`classifyError` in `converse.js`) tripped by prior failures, or that session's cost ceiling. **No fix without reproduction + a Render log line** (`converse_handler_error` vs `converse_token_ceiling_exceeded`). Captured so it is not lost; do **not** act until it recurs with evidence. Host-owned (backend). *(Note: cycle-317 baseline closes this Rejected / no-repro at the 317 kickoff; this row migrates to Rejected at the validated-backlog pass.)* | Low | Cycle 316.6 (transient; not reproduced) |
+| BL-7 | Event-log **cumulative within a conversation**, **grouped by turn** (in-memory, not per-turn-ephemeral). `composed-view.jsx` shares one `events` array between the live walk and the log, and clears it on each turn archive (`setEvents([])` in the `turnComplete` effect), so the log is **empty at conversation-complete**. **Re-scoped 317.3 (baseline A-317.3-1):** a bare don't-wipe would break the walk (`completedCount ≥ 6` from turn 2 on → every turn reads instantly complete), so split the array into a **live list** (current turn; wiped per turn as now) and an **archive list** (completed turns; never wiped). The log renders the archive as **collapsible turn groups** — start/end markers folded to one row; `plate_the_dish` keeps its latency — plus the in-progress turn. Composes with BL-8 (each turn group is the home for that turn's payload). Supersedes §6's localStorage persistence (D-WS2-20). Host logic + markup (`composed-view.jsx`) + new log CSS (home per BL-10). Host-owned. | Medium | Cycle 316.6 (live; owner decision — persistent) |
+| BL-8 | **Payload-surfacing** — show each step's real **per-turn** content ("this turn") beneath its fixed teaching line. The host already computes these artifacts in `converse.js` and discards them: parsed intent (take_the_order), assembled-prompt metadata (brief_the_chef), model+latency+tokens (plate_the_dish), parsed markers/tickets (read_the_ticket), served answer (serve_by_type — already shown), recorded side-effects (stock_the_pantry). **Design intent: paired, lesson-primary, payload-subordinate.** The overlay's teaching message stays primary (the lesson; constant; overlay-owned #6); the payload is a compact, visually subordinate "this turn" block beneath it (the proof; varying; host-owned). **Never replace the teaching message.** Payload weight varies per step; consider payload-on-demand if the walk crowds, but **default to showing it** (a credibility wedge must show its proof). This is the **credibility-wedge** feature (third-party-dev adoption) and is **§6's original payload-bearing replay intent** (D-WS2-17 immutable turn record) re-aimed from replay to surfacing. Est. **~½ cycle minimum-credible** (intent + markers + usage, **no raw system prompt**) to **~1 cycle full** (incl. assembled prompt — needs redaction review + an A2 `CONTRACT.md` amendment for an out-of-band payload channel). Likely **Cycle 317** (OBJ-2). Security: never leak the system prompt / intake PII. Recommend a **cheap market probe before the full build**. Cross-cutting (host data + overlay display). | Medium | Cycle 316.6 (replay→payload reframe; credibility-wedge decision) |
+| BL-9 | **Local-build fragility — overlay package pruned by `npm install`.** `@paradigmpilot/pattern-in-motion-overlay` is installed `--no-save` (per `render.yaml`'s pinned build command — the pinned GitHub SHA is the single source of truth for the overlay version, so `package.json` is kept clean), so any subsequent `npm install` prunes it from `node_modules` — the local build then fails (`composed-view.jsx`'s overlay import unresolved) until it is reinstalled. **Production is unaffected** (`render.yaml` reinstalls at build time); the fragility is **local dev/build only**. Surfaced during WO-317.2a's local build gate (316.5d's SDK bump had silently pruned it). Fix candidate: a `postinstall`/`predev` hook **or** a documented setup step so the build gate does not break out from under future WOs. **Environmental, not caused by 317.2a** (no imports touched; `main` would fail identically). Host-owned (intake-triager build tooling). | Medium | Cycle 317.2 (WO-317.2a build-gate discovery) |
+| BL-10 | **Composed-view CSS-ownership migration.** The host's composed-view **layout** CSS (`.composed`, `.composed-scroll`, `.control-bar`, `.composed-shell`, the welcome / live-block / Zone rules, the ≥64rem two-pane grid) lives in the overlay's **`example/example.css`** and is imported by `composed-view.jsx` — **inverted ownership**: the host owns the composed-view *markup* (P-9, `composed-view.jsx`) but the overlay owns its *styling*, inside a file labeled "example" that a third-party cloner reasonably reads as demo-only (Marcus Fontoura flag). **GOLD fix:** a **host stylesheet** (e.g. `src/frontend/composed-view.css`) owns the composed-view layout; the overlay ships only **contract-crossing** assets (its `tokens.css` + component CSS: Trace / ManualOverlay / Pill) **plus its own self-contained demo**. Strengthens the third-party clone story (clean A2 boundary; intake-triager becomes the copyable "how a host composes the overlay" reference; comms unity stays in the shared tokens + components). **Sequences ahead of BL-15 + BL-7** so their new CSS lands in the correct home (no straddle, no fix-then-move). **Move-vs-split is gated on the overlay `example/` harness source** — if the overlay's own demo page still uses `.composed`/`.chat`/`.msg`, these are a **shared dependency** and the fix is a clean **split** (overlay keeps its demo copy; host gets its own), not a move. Acceptance: **pure relocation → pixel-identical render**; **zero new tokens** (Robin Malfait Rule). Host-owned (intake-triager new stylesheet + `composed-view.jsx` import repoint; overlay `example.css` trim). | High | Cycle 317.3 (Marcus deviation, owner-approved; baseline A-317.3-1) |
 
 ---
 
