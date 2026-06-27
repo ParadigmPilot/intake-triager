@@ -1,9 +1,24 @@
+/* Page frame (BL-15 completion): bind html → body → #root to the viewport and
+   clip body overflow, so .composed's height: calc(100vh - 4rem) is enforced
+   (not overrun by a tall transcript) and .composed-scroll becomes the sole
+   scroller — keeping the .control-bar footer pinned. box-sizing: border-box
+   folds body's 2rem padding into the 100% so it doesn't re-overflow. Overrides
+   index.html's inline <style> body by load order (main.jsx injects this after
+   the <head> block). */
+html,
+#root {
+  height: 100%;
+}
+
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
   margin: 0;
   padding: 2rem;
   background: #fafaf7;
   color: #1f2937;
+  box-sizing: border-box;
+  height: 100%;
+  overflow: hidden;
 }
 
 header {
