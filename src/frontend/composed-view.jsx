@@ -46,7 +46,7 @@ import { createStateMachine, createEventStream } from '../substrate/index.js';
 // transitively by the barrel import above. Zero new design tokens — every
 // var(--*) resolves in the overlay token set already (Robin Malfait Rule).
 import '../../node_modules/@paradigmpilot/pattern-in-motion-overlay/src/tokens.css';
-import '../../node_modules/@paradigmpilot/pattern-in-motion-overlay/example/example.css';
+import './composed-view.css';
 
 // The six Service steps, in canonical order (mirrors substrate HOOK_CONTRACT).
 const SERVICE_STEP_COUNT = 6;
