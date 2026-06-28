@@ -94,8 +94,11 @@ function ComposedView() {
       window.matchMedia('(min-width: 64rem)').matches,
   );
 
-  // The live step block snaps top-aligned on each advance (Zone 2).
+  // The live step block snaps into view on each advance (Zone 2).
   const liveBlockRef = useRef(null);
+  // The scroll region — rested at the bottom when no walk is running so the
+  // newest message stays in view (BL-12 scroll discipline).
+  const scrollRef = useRef(null);
 
   // Subscribe the composed view to the gate (the released-event timeline). One
   // subscription for the lifetime of the view; gate is module-stable.
@@ -140,12 +143,24 @@ function ComposedView() {
     setEvents([]);
   }, [turnComplete]);
 
-  // Snap-to-top: whenever a step is released the live block scrolls top-aligned
-  // beneath the Title band. Guarded for non-DOM environments.
+  // Live-block in view during the walk (BL-12 decision a): whenever a step is
+  // released the live block scrolls into view beneath the Title band — the
+  // teaching beat. Runs only while a walk is in progress. Guarded for non-DOM.
   useEffect(() => {
     if (!started) return;
     liveBlockRef.current?.scrollIntoView?.({ block: 'start' });
   }, [events.length, started]);
+
+  // Bottom-rest (BL-12 decisions 1 + a): once a walk ends, the scroll region
+  // rests at the bottom so the newest message is in view — chat-app default.
+  // Gated on !started, so it never fights the live-block snap above. Guarded
+  // for non-DOM environments.
+  useEffect(() => {
+    if (started) return;
+    if (!everSubmitted) return;
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [started, everSubmitted]);
 
   // App turn lifecycle → six-step walk (D3). These run inside App.handleSend.
   // onTurnSubmitted opens the walk; onTurnResponded carries the served answer
@@ -235,7 +250,7 @@ function ComposedView() {
         >
           {({ banners, transcript, footer }) => (
             <>
-              <div className="composed-scroll">
+              <div className="composed-scroll" ref={scrollRef}>
                 <div className="chat">
             {!everSubmitted && (
               <div className="composed-welcome">
