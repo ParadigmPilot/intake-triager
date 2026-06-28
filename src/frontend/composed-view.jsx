@@ -67,9 +67,70 @@ const gate = createModeGate(hostSubstrate, 'manual');
 // paces the reveal downstream.
 const driver = createTurnDriver(stream);
 
+// Fold a turn's raw event stream to one row per Service step for the Event log
+// (BL-7). Steps arrive as step_started/step_ended pairs at the same instant, so
+// a single row per stepId reads cleanest. plate_the_dish is the exception — it
+// spans the real LLM latency (opened on submit, ended on response), so its row
+// carries the elapsed milliseconds.
+function foldTurnEvents(turnEvents) {
+  const order = [];
+  const byStep = new Map();
+  for (const event of turnEvents) {
+    if (!byStep.has(event.stepId)) {
+      order.push(event.stepId);
+      byStep.set(event.stepId, { stepId: event.stepId });
+    }
+    const record = byStep.get(event.stepId);
+    if (event.type === 'step_started') record.started = event.timestamp;
+    if (event.type === 'step_ended') record.ended = event.timestamp;
+  }
+  return order.map((stepId) => {
+    const { started, ended } = byStep.get(stepId);
+    const latency =
+      stepId === 'plate_the_dish' && started != null && ended != null
+        ? ended - started
+        : null;
+    return { stepId, latency };
+  });
+}
+
+// One collapsible turn in the cumulative Event log (BL-7). Completed turns
+// render collapsed; the in-progress turn is forced open via `live`. <details>
+// carries the collapse affordance natively (keyboard + screen-reader, WCAG).
+function TurnGroup({ index, events, live = false }) {
+  const rows = foldTurnEvents(events);
+  return (
+    <details
+      className={live ? 'turn-group turn-group--live' : 'turn-group'}
+      open={live || undefined}
+    >
+      <summary className="turn-group__header">
+        Turn {index + 1}
+        {live && <span className="turn-group__live-tag">in progress</span>}
+      </summary>
+      <div className="turn-group__body">
+        {rows.map((row) => (
+          <div key={row.stepId} className="event-row folded">
+            <strong>{row.stepId}</strong>
+            {row.latency != null && (
+              <code className="event-latency">{row.latency} ms</code>
+            )}
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+}
+
 function ComposedView() {
-  // Released (post-gate) events — drives the live render and the Event log.
+  // Released (post-gate) events for the CURRENT turn — the live list. Drives
+  // the live render, the walk's six-step completion gate, and the in-progress
+  // group in the Event log. Reset per turn (BL-7).
   const [events, setEvents] = useState([]);
+  // Completed turns, append-only across the conversation — the archive. Each
+  // entry is one finished turn's event list, rendered as a collapsed group in
+  // the Event log. Never wiped within a conversation (BL-7 cumulative log).
+  const [archive, setArchive] = useState([]);
   // The walk is in progress (a turn has been submitted, not yet archived).
   const [started, setStarted] = useState(false);
   // The served answer prose, carried out of band from onTurnResponded (the
@@ -140,6 +201,9 @@ function ComposedView() {
     setStarted(false);
     setReplyProse(null);
     gate.reset();
+    // Archive the just-completed turn (append-only), then reset the live list
+    // for the next turn — the log accumulates across the conversation (BL-7).
+    setArchive((prev) => [...prev, { events }]);
     setEvents([]);
   }, [turnComplete]);
 
@@ -331,17 +395,21 @@ function ComposedView() {
             </button>
           </div>
           <div id="event-log">
-            {events.length === 0 ? (
+            {archive.length === 0 && events.length === 0 ? (
               <div className="event-row">
                 <em>Events will appear here once a turn runs.</em>
               </div>
             ) : (
-              events.map((e, i) => (
-                <div key={i} className={`event-row ${e.type}`}>
-                  <strong>{e.type}</strong> &nbsp; {e.stepId} &nbsp;{' '}
-                  <code>{new Date(e.timestamp).toISOString().slice(11, 23)}</code>
-                </div>
-              ))
+              <>
+                {/* Completed turns — collapsible groups, collapsed by default. */}
+                {archive.map((turn, ti) => (
+                  <TurnGroup key={ti} index={ti} events={turn.events} />
+                ))}
+                {/* The in-progress turn — shown expanded during the walk. */}
+                {started && events.length > 0 && (
+                  <TurnGroup index={archive.length} events={events} live />
+                )}
+              </>
             )}
           </div>
         </aside>

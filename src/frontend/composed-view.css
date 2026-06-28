@@ -63,6 +63,81 @@ h1 {
   color: #6366f1;
 }
 
+/* Cumulative Event log — turn groups (BL-7). Each completed turn is a
+   collapsible <details>; the in-progress turn is forced open. Reuses the
+   #event-log palette and tokens.css spacing/colour — zero new tokens. */
+.turn-group {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+}
+
+.turn-group:last-child {
+  margin-bottom: 0;
+}
+
+.turn-group--live {
+  border-color: var(--color-amber);
+}
+
+/* Group header doubles as the collapse toggle. The default disclosure triangle
+   is suppressed (list-style + the WebKit marker rule) in favour of a rotating
+   caret so the affordance reads identically across browsers. */
+.turn-group__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  color: var(--color-charcoal);
+  font-weight: var(--font-weight-semibold);
+  list-style: none;
+  cursor: pointer;
+}
+
+.turn-group__header::-webkit-details-marker {
+  display: none;
+}
+
+.turn-group__header::before {
+  content: '▸';
+  color: var(--color-stone);
+  font-size: 0.75rem;
+  transition: transform var(--transition-base);
+}
+
+.turn-group[open] > .turn-group__header::before {
+  transform: rotate(90deg);
+}
+
+.turn-group__live-tag {
+  color: var(--color-amber);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-sm);
+}
+
+.turn-group__body {
+  padding: 0 0.5rem 0.25rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+/* Folded step row — one per Service step (the start/end pair collapsed). */
+.event-row.folded {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.event-latency {
+  flex: none;
+  padding: 0 0.3rem;
+  background: var(--color-amber-soft);
+  color: var(--color-amber-deep);
+  border-radius: 0.25rem;
+  font-size: var(--font-size-sm);
+}
+
 .controls {
   display: flex;
   align-items: center;
