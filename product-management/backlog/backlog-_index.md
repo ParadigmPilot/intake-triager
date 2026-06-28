@@ -12,9 +12,9 @@ quality: TBD
 alignment: Partial
 
 # === VERSIONING FIELDS ===
-version: "1.9"
+version: "1.10"
 created: "2026-06-15"
-updated: "2026-06-25"
+updated: "2026-06-28"
 owner: Sam R. Harkreader
 
 # === DESCRIPTION FIELDS ===
@@ -35,7 +35,7 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 
 **Total Items:** 13  
 **Next ID:** BL-14  
-**Last Updated:** 2026-06-25
+**Last Updated:** 2026-06-28
 
 > Index created at **session 315.8** from the first live-Render OBJ-1 validation
 > pass. Item names are recorded as **rows**; individual item files are not
@@ -63,6 +63,16 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 > `next_id` 13→14. *(OBJ-3 allocation: 317.3 ran BL-5 ✓ → CSS migration ✓ → BL-15
 > [3 WOs] ✓ → BL-12 ✓ → BL-7 still pending as the last OBJ-3 item; BL-13 is a
 > newly-surfaced investigate-later item, not OBJ-3 build work.)*
+>
+> **v1.10 (2026-06-28):** session-317.4 — **BL-12 diagnosis (no status change).**
+> Its pending "≥64rem / during-walk" live confirm failed and named the root: on
+> wide the two-pane grid (`.composed-shell`) declares no `grid-template-rows`, so
+> `.composed { height:100% }` is indefinite, the flex column never bounds, and a
+> tall walk pushes the `.control-bar` footer ("Next Step") past the viewport
+> bottom. Fix authored — **WO-317.4b** (host-side, CSS-only grid-row bind in
+> `composed-view.css`); **also resolves overlay BL-14** host-side (same root,
+> ownership-corrected there). **BL-12 stays Captured pending re-confirm.** No new
+> items; counts unchanged (13 / 14).
 
 ---
 
@@ -93,7 +103,7 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | BL-9 | **Local-build fragility — overlay package pruned by `npm install`.** Overlay installed `--no-save` (pinned `render.yaml` SHA is the single source of truth, keeping `package.json` clean), so any `npm install` prunes it and the local build fails until reinstalled. **Production unaffected.** Fix candidate: a `postinstall`/`predev` hook or documented setup step. Host-owned (build tooling). | Medium | Cycle 317.2 (WO-317.2a build-gate discovery) |
 | BL-10 | **Composed-view CSS-ownership migration.** Host composed-view layout CSS lived in the overlay's `example/example.css` (inverted ownership; Marcus Fontoura flag). GOLD fix: a host stylesheet (`src/frontend/composed-view.css`) owns the layout; the overlay ships only contract-crossing assets + its own demo. Verbatim **split** (the overlay's demo also uses `.composed*`). **(Delivered 317.3 via PR #48; migration to Complete deferred to the validated-backlog pass.)** | High | Cycle 317.3 (Marcus deviation; A-317.3-1) |
 | BL-11 | **`index.html` inline `<style>` reconciliation.** The SPA shell carries a legacy inline `<style>` from the flat-clone era: a global `body` rule that competes with `composed-view.css`'s `body`, plus `.transcript` / `.message*` / flat `form` / `.banner*` rules — active on every render, exposing a second styling location to a cloner (same tangle as BL-10, one layer up). **GOLD:** move page styling into host stylesheet(s); the shell carries no design CSS (or only the bare-clone minimum); reconcile the duplicate `body`. **(C) follow-up** to the 317.3 page-frame fix. Touches the **clone** (P-9 — take care). Host-owned (`index.html` + host CSS). | Medium | Cycle 317.3 (page-frame diagnosis) |
-| BL-12 | **Composed-view scroll discipline.** The middle scroll region (`.composed-scroll`) rests at the **bottom** so the newest message stays in view (chat-app default), **except during the manual walk**, where the **live step block stays in view**. Owner decisions: (1) bottom-pinned internal scroll; (2) header + input pinned only (teaching scrolls with the transcript); (a) live block in view during the walk, rest at bottom on completion. Add a ref to `.composed-scroll`; a `!started`-gated bottom-rest effect; retain the live-block snap. Distinct from BL-15. Host-owned (`composed-view.jsx`). **(Delivered 317.3e via PR #51 — pending live confirm of the during-walk + ≥64rem behavior.)** | High | Cycle 317.3 (layout design decisions) |
+| BL-12 | **Composed-view scroll discipline.** The middle scroll region (`.composed-scroll`) rests at the **bottom** so the newest message stays in view (chat-app default), **except during the manual walk**, where the **live step block stays in view**. Owner decisions: (1) bottom-pinned internal scroll; (2) header + input pinned only (teaching scrolls with the transcript); (a) live block in view during the walk, rest at bottom on completion. Add a ref to `.composed-scroll`; a `!started`-gated bottom-rest effect; retain the live-block snap. Distinct from BL-15. Host-owned (`composed-view.jsx`). **(Delivered 317.3e via PR #51 — pending live confirm of the during-walk + ≥64rem behavior.)** **317.4:** ≥64rem/during-walk confirm **failed** — wide grid-row gap; fix **WO-317.4b** (host `composed-view.css`), pending re-confirm. | High | Cycle 317.3 (layout design decisions) |
 | BL-13 | **Assistant goes silent — continued turns get no visible reply.** Observed (317.3 live): after a sequence of workplace-conflict turns, the assistant produced **no visible Taylor response** to subsequent user messages ("Well?", "Are you not going to answer me anymore?"); the **input stayed enabled**, so the user kept sending with no feedback or indication. **Not yet diagnosed** — candidates (do not assume): (a) **crisis-end / refusal** path — Taylor's `[RULES]` refuse further turns at the prompt level while `status` stays `active` (known gold-vision §6 design point; input is not disabled), refusal rendering as empty/near-empty; (b) an empty/near-empty model reply; (c) a silently-errored turn (no banner shown); (d) a withheld reply. **Investigation needs:** Render logs for those turns (`converse_turn_received` / `converse_turn_complete` `status` / error events) + a repro. UX concern regardless of cause: a user sending into apparent silence with no feedback. Host-owned (backend `converse` + frontend reply rendering). | Medium | Cycle 317.3 (live eyes-on) |
 
 ---
@@ -140,4 +150,4 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 _Index maintained by: Sam R. Harkreader_  
-_Last updated: 2026-06-25_
+_Last updated: 2026-06-28_
