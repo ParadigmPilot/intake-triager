@@ -187,7 +187,8 @@ function TurnPayload({ stepId, orderText, artifacts, latency }) {
         <span className="turn-payload__label">This turn — ticket read</span>
         {markers.length === 0 ? (
           <p className="turn-payload__body turn-payload__body--muted">
-            Nothing flagged on this ticket.
+            No record on this ticket yet — the Chef writes one only once the
+            intake has enough to triage.
           </p>
         ) : (
           <ul className="turn-payload__list">
@@ -212,7 +213,8 @@ function TurnPayload({ stepId, orderText, artifacts, latency }) {
         <span className="turn-payload__label">This turn — records filed</span>
         {markers.length === 0 ? (
           <p className="turn-payload__body turn-payload__body--muted">
-            No record filed this turn.
+            Nothing to file yet — a record is filed only once the intake is
+            complete.
           </p>
         ) : (
           <ul className="turn-payload__list">
