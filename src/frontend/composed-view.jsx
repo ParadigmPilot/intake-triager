@@ -258,6 +258,10 @@ function ComposedView() {
   const [pendingFirstStep, setPendingFirstStep] = useState(false);
   // Remounts the live Trace per turn so step state starts clean.
   const [activeTurnKey, setActiveTurnKey] = useState(0);
+  // plate_the_dish call latency (BL-8, WO-317.6b). Read from the RAW stream so
+  // the receipt shows real latency WHILE the learner is on plate_the_dish — see
+  // the subscription effect below. Cleared per turn on submit / reset / fail.
+  const [plateLatency, setPlateLatency] = useState(null);
 
   // Event log disclosure (BL-13). Non-modal: persists through the walk, toggled
   // from the line-2 button. Open by default on wide (fills the dock beside the
@@ -284,18 +288,27 @@ function ComposedView() {
     return unsubscribe;
   }, []);
 
+  // plate_the_dish latency (BL-8, WO-317.6b). Read from the RAW stream, not the
+  // gated events: plate_ended lands on the raw stream the instant the response
+  // returns (driver.turnResponded), so the receipt shows real call latency WHILE
+  // the learner is on plate_the_dish. The gated events release plate_ended a step
+  // late (at read_the_ticket), which stranded latency in the Event log only.
+  useEffect(() => {
+    let plateStarted = null;
+    const unsubscribe = stream.subscribe((event) => {
+      if (event.stepId !== 'plate_the_dish') return;
+      if (event.type === 'step_started') plateStarted = event.timestamp;
+      if (event.type === 'step_ended' && plateStarted != null) {
+        setPlateLatency(event.timestamp - plateStarted);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
   // The active Service step (last step_started) — keys the per-turn payload
   // block to the step currently being walked (BL-8).
   const currentStep =
     [...events].reverse().find((e) => e.type === 'step_started')?.stepId ?? null;
-
-  // plate_the_dish latency for the live turn (BL-8 part 2) — folded from the
-  // released events (same source as the Event log). Null until plate has both
-  // started and ended; the plate payload block fills it reactively when the
-  // back half releases plate_ended.
-  const plateLatency =
-    foldTurnEvents(events).find((r) => r.stepId === 'plate_the_dish')?.latency ??
-    null;
 
   const completedCount = events.filter((e) => e.type === 'step_ended').length;
   const turnComplete = started && completedCount >= SERVICE_STEP_COUNT;
@@ -365,6 +378,7 @@ function ComposedView() {
     setReplyProse(null);
     setOrderText(content ?? null);
     setArtifacts(null);
+    setPlateLatency(null);
     setEverSubmitted(true);
     setActiveTurnKey((k) => k + 1);
     setStarted(true);
@@ -389,6 +403,7 @@ function ComposedView() {
     setReplyProse(null);
     setOrderText(null);
     setArtifacts(null);
+    setPlateLatency(null);
     setPendingFirstStep(false);
     setStarted(false);
   }
@@ -413,6 +428,7 @@ function ComposedView() {
     setReplyProse(null);
     setOrderText(null);
     setArtifacts(null);
+    setPlateLatency(null);
     setPendingFirstStep(false);
     setActiveTurnKey((k) => k + 1);
   }
