@@ -170,6 +170,53 @@ h1 {
   font-size: 0.875rem;
 }
 
+/* Demo-limit callout (WO-317.4e / BL-16). The prominent amber notice shown in
+   the .control-bar footer when the session budget is spent — the single
+   in-view source (the redundant top banner is removed). Spans the footer row
+   (flex: 1 1 100%) so it is never pushed off-screen. Amber triad + existing
+   charcoal / radius / spacing / font tokens only (Robin Malfait Rule). */
+.demo-limit {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-amber-soft);
+  border: 1px solid var(--color-amber);
+  border-radius: var(--radius-md);
+}
+
+.demo-limit__title {
+  margin: 0;
+  color: var(--color-amber-deep);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+}
+
+.demo-limit__body {
+  margin: 0;
+  color: var(--color-charcoal);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+}
+
+/* Button-styled action: deep-amber fill + soft text (~9:1 contrast, WCAG AA).
+   Hover underlines rather than shifting colour so contrast never drops. */
+.demo-limit__action {
+  align-self: flex-start;
+  padding: 0.5rem 1rem;
+  background: var(--color-amber-deep);
+  color: var(--color-amber-soft);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+}
+
+.demo-limit__action:hover {
+  text-decoration: underline;
+}
+
 .chat-history {
   display: flex;
   flex-direction: column;

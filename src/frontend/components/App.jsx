@@ -23,8 +23,6 @@ import { createStateMachine, createEventStream } from '../../substrate/index.js'
 
 const BACKEND_URL = '/converse';
 const GENERIC_ERROR = 'we had a problem recording this — please try again';
-const DEMO_LIMIT_MESSAGE =
-  "You've reached the demo limit. Start a new session from the demo page.";
 
 // The per-session turn budget is spent — the demo session is used up and a new
 // session is the only way forward. Two backend paths report this, both
@@ -157,9 +155,6 @@ export default function App({
   // footer — without App taking on any layout class itself.
   const banners = (
     <>
-      {limitReached && (
-        <div className="banner banner-status">{DEMO_LIMIT_MESSAGE}</div>
-      )}
       {terminal && (
         <div className="banner banner-status">
           Conversation {terminalReason}.
