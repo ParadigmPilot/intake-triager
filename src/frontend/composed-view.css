@@ -451,6 +451,52 @@ h1 {
   line-height: var(--line-height-snug);
 }
 
+/* Per-turn payload (BL-8, part 1). The "this turn" block beneath a Service
+   step's constant teaching line — paired, lesson-primary, payload-subordinate
+   (D-RPR-4): small and muted so it reads beneath the lesson, never replacing
+   it. A stone left-rule sets it apart from the amber Trace without competing
+   for emphasis. Existing tokens only (Robin Malfait Rule). */
+.turn-payload {
+  margin-top: 0.4rem;
+  padding: 0.3rem 0 0.3rem 0.6rem;
+  border-left: 2px solid var(--color-stone);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.turn-payload__label {
+  color: var(--color-stone);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.turn-payload__body {
+  margin: 0;
+  color: var(--color-charcoal);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+}
+
+.turn-payload__body--muted {
+  color: var(--color-stone);
+}
+
+.turn-payload__list {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.turn-payload__item {
+  color: var(--color-charcoal);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+}
+
+.turn-payload__item code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
 /* Anchored control footer (WO-315.5d): direct child of the .composed flex
    column, pinned below the scroll region so the snap-to-top never drags it. */
 .control-bar {

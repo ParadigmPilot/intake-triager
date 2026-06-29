@@ -85,7 +85,7 @@ export default function App({
     // composition (overlay side) starts the pattern-in-motion walk from
     // here. No-op when no consumer is attached (pure clone). intake-triager
     // knows nothing of the overlay, the gate, or the six Service steps.
-    onTurnSubmitted?.();
+    onTurnSubmitted?.(content);
 
     const body = conversationId
       ? { conversation_id: conversationId, content }
@@ -119,7 +119,7 @@ export default function App({
       // The reply prose for the Step-05 overlay→prose swap. The substrate
       // event stream is sealed to events-only (A2 contract carries no
       // payload), so the prose is announced out of band, here.
-      onTurnResponded?.(data.reply.content);
+      onTurnResponded?.(data.reply.content, data.artifacts ?? null);
 
       if (data.status === 'complete' || data.status === 'escalated') {
         setTerminal(true);

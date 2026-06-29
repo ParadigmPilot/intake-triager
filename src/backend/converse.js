@@ -162,6 +162,13 @@ export default async function converse(req, res) {
       conversation_id,
       reply: { role: ASSISTANT_ROLE, content: prose },
       status: finalStatus,
+      // Per-turn artifacts for the composition overlay (BL-8). TYPE ONLY —
+      // the marker payload is intake content (TRIAGE_RECORD = the record
+      // itself) and never leaves the server (§10). Additive field; the bare
+      // clone ignores it.
+      artifacts: {
+        markers: markers.map((m) => ({ type: m.type })),
+      },
       demoSession: {
         turnsUsed: sessionAfter.turns_used,
         turnBudget: sessionAfter.turn_budget,
