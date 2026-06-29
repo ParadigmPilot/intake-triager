@@ -12,7 +12,7 @@ quality: TBD
 alignment: Partial
 
 # === VERSIONING FIELDS ===
-version: "1.14"
+version: "1.15"
 created: "2026-06-15"
 updated: "2026-06-28"
 owner: Sam R. Harkreader
@@ -100,17 +100,21 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 > bottom-pinned region; only faint footer placeholder text shows). Follows the
 > WO-317.4d BL-15 frontend fix. Captured 11→12; total 15→16; `next_id` 16→17.
 
+> **v1.15 (2026-06-28):** session-317.4 — **BL-16 → Complete** (WO-317.4e / PR #56;
+> owner live-confirmed: prominent amber demo-limit callout in the in-view footer at
+> the 10-turn limit). Captured 12→11; Complete 4→5; total/`next_id` unchanged (16 / 17).
+
 ---
 
 ## Summary by Status
 
 | Status | Count |
 |--------|-------|
-| Captured | 12 |
+| Captured | 11 |
 | Triaged | 0 |
 | Ready | 0 |
 | Scheduled | 0 |
-| Complete | 4 |
+| Complete | 5 |
 | Rejected | 0 |
 | **Total** | **16** |
 
@@ -131,7 +135,6 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | BL-11 | **`index.html` inline `<style>` reconciliation.** The SPA shell carries a legacy inline `<style>` from the flat-clone era: a global `body` rule that competes with `composed-view.css`'s `body`, plus `.transcript` / `.message*` / flat `form` / `.banner*` rules — active on every render, exposing a second styling location to a cloner (same tangle as BL-10, one layer up). **GOLD:** move page styling into host stylesheet(s); the shell carries no design CSS (or only the bare-clone minimum); reconcile the duplicate `body`. **(C) follow-up** to the 317.3 page-frame fix. Touches the **clone** (P-9 — take care). Host-owned (`index.html` + host CSS). | Medium | Cycle 317.3 (page-frame diagnosis) |
 | BL-13 | **Assistant goes silent — continued turns get no visible reply.** Observed (317.3 live): after a sequence of workplace-conflict turns, the assistant produced **no visible Taylor response** to subsequent user messages ("Well?", "Are you not going to answer me anymore?"); the **input stayed enabled**, so the user kept sending with no feedback or indication. **Not yet diagnosed** — candidates (do not assume): (a) **crisis-end / refusal** path — Taylor's `[RULES]` refuse further turns at the prompt level while `status` stays `active` (known gold-vision §6 design point; input is not disabled), refusal rendering as empty/near-empty; (b) an empty/near-empty model reply; (c) a silently-errored turn (no banner shown); (d) a withheld reply. **Investigation needs:** Render logs for those turns (`converse_turn_received` / `converse_turn_complete` `status` / error events) + a repro. UX concern regardless of cause: a user sending into apparent silence with no feedback. Host-owned (backend `converse` + frontend reply rendering). | Medium | Cycle 317.3 (live eyes-on) |
 | BL-15 | **Demo turn-budget exhaustion surfaces as an opaque 401 mid-conversation.** During a live walk a `POST /converse` returned **401 Unauthorized** and never reached the converse handler (no `converse_turn_received`). **Diagnosed 317.4:** root cause is the **per-session turn budget** (default **10**, `verify.js` `DEFAULT_TURN_BUDGET` / `DEMO_TURN_BUDGET`) — 7 turns (conv `3e7b6891`) + 3 turns (conv `2ada27ac`) = 10 used; the **11th** turn 401'd. **TTL ruled out** (session 01:08 → expires 02:08; failure ~01:42). **BL-14 interaction:** "New conversation" starts a new *conversation* but reuses the same *demo session*, so the budget **carries across the reset** — the user hits the cap mid-conversation thinking they started fresh. The 401 is `session-middleware.js` (likely the `DEMO_SESSION_TERMINAL` branch, set by cost-protection on budget exhaustion). **UX defect:** `App.jsx` maps any non-OK to `GENERIC_ERROR` ("…please try again") — wrong for a budget cap; retry won't help and it hides that this is a *demo limit*. **Fix direction (product + auth):** (a) map the specific 401 code to an honest "demo limit reached — start a new session" message + disable input; (b) product call on whether a reset mints a fresh budget — **note: resetting the budget defeats the cost cap (infinite resets = infinite spend).** **Confirm path with** `cost-protection-middleware.js` + the 401 `error.code`. Distinct from BL-13. Host-owned (backend auth/cost + frontend error mapping). | Medium | Cycle 317.4 (live walk + Network 401) |
-| BL-16 | **Demo-limit notice lacks prominence.** At the spent-budget state (BL-15 / WO-317.4d) the only **in-view** signal is faint gray placeholder text ("Demo limit reached.") in the disabled input + a plain "Start a new session" link; the prominent `banner-status` message ("You've reached the demo limit…") sits at the **top of the bottom-pinned scroll region (BL-12) and scrolls out of view**, so the user never sees it. **GOLD:** promote the demo-limit notice into the **in-view footer** as a prominent **amber callout** — bold "Demo limit reached" + one explanatory line + a **button-styled** "Start a new session" action — using the **amber triad + existing tokens** (Robin Malfait Rule; per-token GOLD decision if a needed token is missing). Host UI (`MessageInput.jsx` + host `composed-view.css`). Observed mobile (384px). **Related (separate concern):** `.banner` / `banner-status` / `banner-error` have **no CSS** anywhere — the error + "Conversation ended." banners are unstyled and share the same scroll-off placement; a broader banner-surface pass is its own item. | Medium | Cycle 317.4 (live mobile eyes-on) |
 
 ---
 
@@ -167,6 +170,7 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | BL-2 | Compose the overlay into the deployed intake-triager (host-mount build). 316.3 seam + shell + keyboard-advance; 316.5 cleared the demo door; **316.6 confirmed end-to-end** in a clean incognito session. OBJ-1 core delivered; presentation carved to BL-4/BL-5/BL-7. Owner-ratified Complete. | 316.6 | 316 |
 | BL-12 | **Composed-view scroll discipline + wide-mode footer pin.** Bottom-pinned internal scroll; live block in view during the walk; header + input pinned. Delivered 317.3e (PR #51); the ≥64rem/during-walk facet was the **wide grid-row gap** fixed by **WO-317.4b / PR #53** (host `composed-view.css`: `grid-template-rows: minmax(0,1fr)` + `.composed min-height:0`) — **also resolved overlay BL-14**. Owner live-confirmed wide (9-turn walk, footer pinned, log bounded). | 317.4 (PRs #51/#53) | 317 |
 | BL-14 | **New-conversation reset at the terminal state.** At `complete`/`escalated`, `MessageInput` (gated `terminal && !controlsLocked`, so the final walk's "Next Step" survives) presents a **"New conversation"** button → `App.handleReset` clears conversation state + fires optional `onReset` → composer clears host state to the welcome screen; next send opens a fresh `conversation_id` (no new endpoint). Clone-safe (`onReset` optional). **WO-317.4c / PR #54**; owner live-confirmed (fresh `conversation_id` in Render logs). Closed **OBJ-3**. | 317.4 (PR #54) | 317 |
+| BL-16 | **Demo-limit notice prominence.** The spent-budget notice was promoted from a scrolled-off top banner to a prominent **amber callout in the in-view footer** (bold "Demo limit reached" + one line + button-styled "Start a new session"; ~9:1 contrast); the redundant top banner was removed. Amber triad + existing tokens (zero new). **WO-317.4e / PR #56**; owner live-confirmed at the 10-turn limit (~384px). | 317.4 (PR #56) | 317 |
 
 ---
 
@@ -179,4 +183,4 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 _Index maintained by: Sam R. Harkreader_  
-_Last updated: 2026-06-28 (v1.14)_
+_Last updated: 2026-06-28 (v1.15)_
