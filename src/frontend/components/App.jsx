@@ -23,6 +23,23 @@ import { createStateMachine, createEventStream } from '../../substrate/index.js'
 
 const BACKEND_URL = '/converse';
 const GENERIC_ERROR = 'we had a problem recording this — please try again';
+const DEMO_LIMIT_MESSAGE =
+  "You've reached the demo limit. Start a new session from the demo page.";
+
+// The per-session turn budget is spent — the demo session is used up and a new
+// session is the only way forward. Two backend paths report this, both
+// unambiguous (neither fires on a transient failure): session-middleware 401s
+// with DEMO_SESSION_TERMINAL once terminal_at is set (the normal path —
+// pantry-demo's incrementSessionTurns writes terminal_at when turns_used
+// reaches turn_budget, never on conversation complete/escalated), and
+// cost-protection 403s with TURN_BUDGET_EXCEEDED on the defensive boundary
+// before terminal_at is written. Every other non-OK response stays generic.
+function isDemoLimitReached(status, code) {
+  return (
+    (status === 401 && code === 'DEMO_SESSION_TERMINAL') ||
+    (status === 403 && code === 'TURN_BUDGET_EXCEEDED')
+  );
+}
 
 export default function App({
   substrate,
@@ -43,6 +60,10 @@ export default function App({
   const [terminalReason, setTerminalReason] = useState(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
+  // Distinct terminal state for a spent demo session (WO-317.4d / BL-15) — kept
+  // separate from `terminal` (normal conversation end) and `error` (transient):
+  // it disables the input and points the user to a fresh session, no retry.
+  const [limitReached, setLimitReached] = useState(false);
 
   // Pattern-in-Motion substrate (WO-315.3a). App owns its substrate event
   // stream — injected by mountApp, or self-constructed for a bare <App />
@@ -82,7 +103,14 @@ export default function App({
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data?.error?.message ?? GENERIC_ERROR);
+        // A spent demo session is its own terminal state (clear message + a
+        // link to a new session, input disabled); every other non-OK response
+        // keeps the generic, retry-able error.
+        if (isDemoLimitReached(response.status, data?.error?.code)) {
+          setLimitReached(true);
+        } else {
+          setError(data?.error?.message ?? GENERIC_ERROR);
+        }
         onTurnFailed?.();
         return;
       }
@@ -118,6 +146,7 @@ export default function App({
     setTerminal(false);
     setTerminalReason(null);
     setError(null);
+    setLimitReached(false);
     setPending(false);
     onReset?.();
   }
@@ -128,6 +157,9 @@ export default function App({
   // footer — without App taking on any layout class itself.
   const banners = (
     <>
+      {limitReached && (
+        <div className="banner banner-status">{DEMO_LIMIT_MESSAGE}</div>
+      )}
       {terminal && (
         <div className="banner banner-status">
           Conversation {terminalReason}.
@@ -145,6 +177,7 @@ export default function App({
     <MessageInput
       onSend={handleSend}
       onNewConversation={handleReset}
+      limitReached={limitReached}
       terminal={terminal}
       pending={pending}
       controlsLocked={controlsLocked}
