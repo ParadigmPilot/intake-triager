@@ -122,6 +122,55 @@ function TurnGroup({ index, events, live = false }) {
   );
 }
 
+// Payload detail seam (BL-8). 'standard' surfaces the minimum-credible per-turn
+// artifacts; 'full' is reserved for the deferred richer tier — the renderer is
+// not built, but this constant is the seam it drops behind with no rework.
+// Promotable to a prop/config later without touching the call sites.
+const DETAIL_LEVEL = 'standard';
+
+// Per-turn payload block (BL-8, part 1). Sits BENEATH a Service step's constant
+// teaching line (ManualOverlay) — paired, lesson-primary, payload-subordinate
+// (D-RPR-4); it never replaces the lesson. 'standard' surfaces take_the_order's
+// input (the order as placed, labeled as this step's input) and
+// read_the_ticket's filed records (marker TYPE only — payload bytes never leave
+// the server, §10). plate_the_dish / stock_the_pantry artifacts land in 317.6.
+function TurnPayload({ stepId, orderText, artifacts }) {
+  if (DETAIL_LEVEL !== 'standard') return null; // 'full' renderer reserved
+
+  if (stepId === 'take_the_order' && orderText) {
+    return (
+      <div className="turn-payload">
+        <span className="turn-payload__label">This turn — input</span>
+        <p className="turn-payload__body">{orderText}</p>
+      </div>
+    );
+  }
+
+  if (stepId === 'read_the_ticket') {
+    const markers = artifacts?.markers ?? [];
+    return (
+      <div className="turn-payload">
+        <span className="turn-payload__label">This turn — records filed</span>
+        {markers.length === 0 ? (
+          <p className="turn-payload__body turn-payload__body--muted">
+            No record filed this turn.
+          </p>
+        ) : (
+          <ul className="turn-payload__list">
+            {markers.map((marker, i) => (
+              <li key={i} className="turn-payload__item">
+                <code>{marker.type}</code>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
+
 function ComposedView() {
   // Released (post-gate) events for the CURRENT turn — the live list. Drives
   // the live render, the walk's six-step completion gate, and the in-progress
@@ -136,6 +185,12 @@ function ComposedView() {
   // The served answer prose, carried out of band from onTurnResponded (the
   // stream is sealed to events-only — A2 contract — so the reply rides here).
   const [replyProse, setReplyProse] = useState(null);
+  // The order as placed — surfaced as take_the_order's input beat (BL-8).
+  const [orderText, setOrderText] = useState(null);
+  // Per-turn artifacts from /converse (type-only markers; no payload bytes,
+  // §10) — surfaced beneath read_the_ticket (BL-8). Rides the same out-of-band
+  // channel as replyProse (the event stream carries no payload — A2).
+  const [artifacts, setArtifacts] = useState(null);
   // Whether any turn has been submitted yet — gates the idle welcome surface.
   const [everSubmitted, setEverSubmitted] = useState(false);
   // First-step release (mount-before-advance): the live Trace must be mounted
@@ -169,6 +224,11 @@ function ComposedView() {
     });
     return unsubscribe;
   }, []);
+
+  // The active Service step (last step_started) — keys the per-turn payload
+  // block to the step currently being walked (BL-8).
+  const currentStep =
+    [...events].reverse().find((e) => e.type === 'step_started')?.stepId ?? null;
 
   const completedCount = events.filter((e) => e.type === 'step_ended').length;
   const turnComplete = started && completedCount >= SERVICE_STEP_COUNT;
@@ -229,21 +289,24 @@ function ComposedView() {
   // App turn lifecycle → six-step walk (D3). These run inside App.handleSend.
   // onTurnSubmitted opens the walk; onTurnResponded carries the served answer
   // and emits the back half; onTurnFailed unwinds.
-  function onTurnSubmitted() {
+  function onTurnSubmitted(content) {
     // Clear any stale buffer FIRST, then emit the fresh front half (take +
     // brief fully, plate opened) into the now-empty gate queue.
     gate.reset();
     setEvents([]);
     driver.turnSubmitted();
     setReplyProse(null);
+    setOrderText(content ?? null);
+    setArtifacts(null);
     setEverSubmitted(true);
     setActiveTurnKey((k) => k + 1);
     setStarted(true);
     setPendingFirstStep(true);
   }
 
-  function onTurnResponded(prose) {
+  function onTurnResponded(prose, turnArtifacts) {
     setReplyProse(prose);
+    setArtifacts(turnArtifacts ?? null);
     // Back half: plate ends (response-ready), then read + serve + stock fire.
     // Buffered by the Manual gate; revealed as the learner advances.
     driver.turnResponded();
@@ -257,6 +320,8 @@ function ComposedView() {
     gate.reset();
     setEvents([]);
     setReplyProse(null);
+    setOrderText(null);
+    setArtifacts(null);
     setPendingFirstStep(false);
     setStarted(false);
   }
@@ -279,6 +344,8 @@ function ComposedView() {
     setStarted(false);
     setEverSubmitted(false);
     setReplyProse(null);
+    setOrderText(null);
+    setArtifacts(null);
     setPendingFirstStep(false);
     setActiveTurnKey((k) => k + 1);
   }
@@ -368,6 +435,11 @@ function ComposedView() {
                   )}
                   <div className="assistant-area">
                     <ManualOverlay substrate={gate} />
+                    <TurnPayload
+                      stepId={currentStep}
+                      orderText={orderText}
+                      artifacts={artifacts}
+                    />
                     {atServe && replyProse && (
                       <div className="msg msg-assistant">{replyProse}</div>
                     )}
