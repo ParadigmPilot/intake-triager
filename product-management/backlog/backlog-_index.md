@@ -12,7 +12,7 @@ quality: TBD
 alignment: Partial
 
 # === VERSIONING FIELDS ===
-version: "1.13"
+version: "1.14"
 created: "2026-06-15"
 updated: "2026-06-28"
 owner: Sam R. Harkreader
@@ -26,15 +26,15 @@ depends_on:
 related: []
 
 # === INDEX EXTENSION FIELDS ===
-next_id: 16
-total_count: 15
+next_id: 17
+total_count: 16
 collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 # Intake Triager Backlog
 
-**Total Items:** 15  
-**Next ID:** BL-16  
+**Total Items:** 16  
+**Next ID:** BL-17  
 **Last Updated:** 2026-06-28
 
 > Index created at **session 315.8** from the first live-Render OBJ-1 validation
@@ -95,19 +95,24 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 > `session-middleware.js` (likely `DEMO_SESSION_TERMINAL`). Confirm path with
 > `cost-protection-middleware.js` + the 401 `error.code`. BL-15 stays Captured.
 
+> **v1.14 (2026-06-28):** session-317.4 — captured **BL-16** (demo-limit notice
+> lacks prominence: the loud `banner-status` message scrolls out of the
+> bottom-pinned region; only faint footer placeholder text shows). Follows the
+> WO-317.4d BL-15 frontend fix. Captured 11→12; total 15→16; `next_id` 16→17.
+
 ---
 
 ## Summary by Status
 
 | Status | Count |
 |--------|-------|
-| Captured | 11 |
+| Captured | 12 |
 | Triaged | 0 |
 | Ready | 0 |
 | Scheduled | 0 |
 | Complete | 4 |
 | Rejected | 0 |
-| **Total** | **15** |
+| **Total** | **16** |
 
 ---
 
@@ -126,6 +131,7 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | BL-11 | **`index.html` inline `<style>` reconciliation.** The SPA shell carries a legacy inline `<style>` from the flat-clone era: a global `body` rule that competes with `composed-view.css`'s `body`, plus `.transcript` / `.message*` / flat `form` / `.banner*` rules — active on every render, exposing a second styling location to a cloner (same tangle as BL-10, one layer up). **GOLD:** move page styling into host stylesheet(s); the shell carries no design CSS (or only the bare-clone minimum); reconcile the duplicate `body`. **(C) follow-up** to the 317.3 page-frame fix. Touches the **clone** (P-9 — take care). Host-owned (`index.html` + host CSS). | Medium | Cycle 317.3 (page-frame diagnosis) |
 | BL-13 | **Assistant goes silent — continued turns get no visible reply.** Observed (317.3 live): after a sequence of workplace-conflict turns, the assistant produced **no visible Taylor response** to subsequent user messages ("Well?", "Are you not going to answer me anymore?"); the **input stayed enabled**, so the user kept sending with no feedback or indication. **Not yet diagnosed** — candidates (do not assume): (a) **crisis-end / refusal** path — Taylor's `[RULES]` refuse further turns at the prompt level while `status` stays `active` (known gold-vision §6 design point; input is not disabled), refusal rendering as empty/near-empty; (b) an empty/near-empty model reply; (c) a silently-errored turn (no banner shown); (d) a withheld reply. **Investigation needs:** Render logs for those turns (`converse_turn_received` / `converse_turn_complete` `status` / error events) + a repro. UX concern regardless of cause: a user sending into apparent silence with no feedback. Host-owned (backend `converse` + frontend reply rendering). | Medium | Cycle 317.3 (live eyes-on) |
 | BL-15 | **Demo turn-budget exhaustion surfaces as an opaque 401 mid-conversation.** During a live walk a `POST /converse` returned **401 Unauthorized** and never reached the converse handler (no `converse_turn_received`). **Diagnosed 317.4:** root cause is the **per-session turn budget** (default **10**, `verify.js` `DEFAULT_TURN_BUDGET` / `DEMO_TURN_BUDGET`) — 7 turns (conv `3e7b6891`) + 3 turns (conv `2ada27ac`) = 10 used; the **11th** turn 401'd. **TTL ruled out** (session 01:08 → expires 02:08; failure ~01:42). **BL-14 interaction:** "New conversation" starts a new *conversation* but reuses the same *demo session*, so the budget **carries across the reset** — the user hits the cap mid-conversation thinking they started fresh. The 401 is `session-middleware.js` (likely the `DEMO_SESSION_TERMINAL` branch, set by cost-protection on budget exhaustion). **UX defect:** `App.jsx` maps any non-OK to `GENERIC_ERROR` ("…please try again") — wrong for a budget cap; retry won't help and it hides that this is a *demo limit*. **Fix direction (product + auth):** (a) map the specific 401 code to an honest "demo limit reached — start a new session" message + disable input; (b) product call on whether a reset mints a fresh budget — **note: resetting the budget defeats the cost cap (infinite resets = infinite spend).** **Confirm path with** `cost-protection-middleware.js` + the 401 `error.code`. Distinct from BL-13. Host-owned (backend auth/cost + frontend error mapping). | Medium | Cycle 317.4 (live walk + Network 401) |
+| BL-16 | **Demo-limit notice lacks prominence.** At the spent-budget state (BL-15 / WO-317.4d) the only **in-view** signal is faint gray placeholder text ("Demo limit reached.") in the disabled input + a plain "Start a new session" link; the prominent `banner-status` message ("You've reached the demo limit…") sits at the **top of the bottom-pinned scroll region (BL-12) and scrolls out of view**, so the user never sees it. **GOLD:** promote the demo-limit notice into the **in-view footer** as a prominent **amber callout** — bold "Demo limit reached" + one explanatory line + a **button-styled** "Start a new session" action — using the **amber triad + existing tokens** (Robin Malfait Rule; per-token GOLD decision if a needed token is missing). Host UI (`MessageInput.jsx` + host `composed-view.css`). Observed mobile (384px). **Related (separate concern):** `.banner` / `banner-status` / `banner-error` have **no CSS** anywhere — the error + "Conversation ended." banners are unstyled and share the same scroll-off placement; a broader banner-surface pass is its own item. | Medium | Cycle 317.4 (live mobile eyes-on) |
 
 ---
 
@@ -173,4 +179,4 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 _Index maintained by: Sam R. Harkreader_  
-_Last updated: 2026-06-28 (v1.13)_
+_Last updated: 2026-06-28 (v1.14)_
