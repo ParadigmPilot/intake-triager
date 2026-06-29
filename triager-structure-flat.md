@@ -60,6 +60,7 @@ src/frontend/components/.gitkeep
 src/frontend/components/App.jsx
 src/frontend/components/MessageInput.jsx
 src/frontend/components/Transcript.jsx
+src/frontend/composed-view.css
 src/frontend/composed-view.jsx
 src/frontend/host-substrate-adapter.js
 src/frontend/index.html
