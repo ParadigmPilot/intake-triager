@@ -12,7 +12,7 @@ quality: TBD
 alignment: Partial
 
 # === VERSIONING FIELDS ===
-version: "1.11"
+version: "1.12"
 created: "2026-06-15"
 updated: "2026-06-28"
 owner: Sam R. Harkreader
@@ -26,15 +26,15 @@ depends_on:
 related: []
 
 # === INDEX EXTENSION FIELDS ===
-next_id: 15
-total_count: 14
+next_id: 16
+total_count: 15
 collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 # Intake Triager Backlog
 
-**Total Items:** 14  
-**Next ID:** BL-15  
+**Total Items:** 15  
+**Next ID:** BL-16  
 **Last Updated:** 2026-06-28
 
 > Index created at **session 315.8** from the first live-Render OBJ-1 validation
@@ -80,6 +80,13 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 > new conversation / exit at the terminal state — no reset path today). Captured
 > 11→11 (−BL-12, +BL-14); Complete 2→3; total 13→14; `next_id` 14→15.
 
+> **v1.12 (2026-06-28):** session-317.4 — **BL-14 → Complete** (PR #54 / WO-317.4c;
+> owner live-confirmed: reset returns to welcome, next send opens a fresh
+> `conversation_id` per Render logs). **OBJ-3 (host presentation) closes** —
+> BL-7 + BL-12 + BL-14 all delivered. Captured **BL-15** (demo auth session
+> expires mid-conversation → opaque 401). Captured 11→11 (−BL-14, +BL-15);
+> Complete 3→4; total 14→15; `next_id` 15→16.
+
 ---
 
 ## Summary by Status
@@ -90,9 +97,9 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | Triaged | 0 |
 | Ready | 0 |
 | Scheduled | 0 |
-| Complete | 3 |
+| Complete | 4 |
 | Rejected | 0 |
-| **Total** | **14** |
+| **Total** | **15** |
 
 ---
 
@@ -110,7 +117,7 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | BL-10 | **Composed-view CSS-ownership migration.** Host composed-view layout CSS lived in the overlay's `example/example.css` (inverted ownership; Marcus Fontoura flag). GOLD fix: a host stylesheet (`src/frontend/composed-view.css`) owns the layout; the overlay ships only contract-crossing assets + its own demo. Verbatim **split** (the overlay's demo also uses `.composed*`). **(Delivered 317.3 via PR #48; migration to Complete deferred to the validated-backlog pass.)** | High | Cycle 317.3 (Marcus deviation; A-317.3-1) |
 | BL-11 | **`index.html` inline `<style>` reconciliation.** The SPA shell carries a legacy inline `<style>` from the flat-clone era: a global `body` rule that competes with `composed-view.css`'s `body`, plus `.transcript` / `.message*` / flat `form` / `.banner*` rules — active on every render, exposing a second styling location to a cloner (same tangle as BL-10, one layer up). **GOLD:** move page styling into host stylesheet(s); the shell carries no design CSS (or only the bare-clone minimum); reconcile the duplicate `body`. **(C) follow-up** to the 317.3 page-frame fix. Touches the **clone** (P-9 — take care). Host-owned (`index.html` + host CSS). | Medium | Cycle 317.3 (page-frame diagnosis) |
 | BL-13 | **Assistant goes silent — continued turns get no visible reply.** Observed (317.3 live): after a sequence of workplace-conflict turns, the assistant produced **no visible Taylor response** to subsequent user messages ("Well?", "Are you not going to answer me anymore?"); the **input stayed enabled**, so the user kept sending with no feedback or indication. **Not yet diagnosed** — candidates (do not assume): (a) **crisis-end / refusal** path — Taylor's `[RULES]` refuse further turns at the prompt level while `status` stays `active` (known gold-vision §6 design point; input is not disabled), refusal rendering as empty/near-empty; (b) an empty/near-empty model reply; (c) a silently-errored turn (no banner shown); (d) a withheld reply. **Investigation needs:** Render logs for those turns (`converse_turn_received` / `converse_turn_complete` `status` / error events) + a repro. UX concern regardless of cause: a user sending into apparent silence with no feedback. Host-owned (backend `converse` + frontend reply rendering). | Medium | Cycle 317.3 (live eyes-on) |
-| BL-14 | **No way to start a new conversation / exit at the terminal state.** At conversation end the footer shows a disabled **"Conversation ended."** Send and there is no control to **restart the demo** — a re-runnable walk matters for the teaching/host-presentation use. **GOLD:** when the conversation ends, the control-bar slot presents a **"New conversation"** button that resets the demo to its initial welcome state — clears the host arrays (`archive`, `events`) and flags (`started`, `everSubmitted`, `replyProse`); a new conversation is a clean slate (the Event-log archive clears). Host concern only — no overlay surface, no third-party impact (the overlay teaches one turn; the host owns the conversation). **Open design point:** restart the demo (frontend reset) vs a genuinely new backend conversation/session — confirms App's terminal-state + reset surface before the WO. Host-owned (`composed-view.jsx` + App footer/terminal-state). | High | Cycle 317.4 (live eyes-on) |
+| BL-15 | **Demo auth session expires mid-conversation → opaque 401.** During a live walk a `POST /converse` returned **401 Unauthorized** and **never reached the converse handler** (no `converse_turn_received` logged) — rejected at the **auth layer**, not the turn logic. Earlier turns on the same demo session succeeded (session created ~01:08, 401 ~01:42), so the magic-link demo session went invalid mid-conversation. **Candidates (do not assume):** (a) session/JWT **TTL expiry** (~30+ min); (b) the **mid-session redeploy** cleared an in-memory session/nonce store; (c) other. **UX defect regardless of cause:** `App.jsx` maps any non-OK to `GENERIC_ERROR` ("we had a problem recording this — please try again"), which is **misleading for a 401** — retrying won't fix an expired session; the user needs to re-auth/reload. A re-runnable demo (BL-14) lengthens sessions, so this surfaces more; a host could 401 mid-demo. **Investigation needs:** auth middleware + magic-link/session issuance + the exact 401 timestamp. Distinct from BL-13. Host-owned (backend auth + frontend error handling). | Medium | Cycle 317.4 (live walk + Network 401) |
 
 ---
 
@@ -145,6 +152,7 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | BL-1 | Live "recording" error on real submit. Root cause: `MODEL` pointed at a retired snapshot (`claude-sonnet-4-20250514`) → `404` before any DB write. Fix: `MODEL=claude-sonnet-4-6` + redeploy. Recurred 316.3 (blueprint re-sync); durable fix in `render.yaml` via WO-316.2e. | 315.8 | 315 |
 | BL-2 | Compose the overlay into the deployed intake-triager (host-mount build). 316.3 seam + shell + keyboard-advance; 316.5 cleared the demo door; **316.6 confirmed end-to-end** in a clean incognito session. OBJ-1 core delivered; presentation carved to BL-4/BL-5/BL-7. Owner-ratified Complete. | 316.6 | 316 |
 | BL-12 | **Composed-view scroll discipline + wide-mode footer pin.** Bottom-pinned internal scroll; live block in view during the walk; header + input pinned. Delivered 317.3e (PR #51); the ≥64rem/during-walk facet was the **wide grid-row gap** fixed by **WO-317.4b / PR #53** (host `composed-view.css`: `grid-template-rows: minmax(0,1fr)` + `.composed min-height:0`) — **also resolved overlay BL-14**. Owner live-confirmed wide (9-turn walk, footer pinned, log bounded). | 317.4 (PRs #51/#53) | 317 |
+| BL-14 | **New-conversation reset at the terminal state.** At `complete`/`escalated`, `MessageInput` (gated `terminal && !controlsLocked`, so the final walk's "Next Step" survives) presents a **"New conversation"** button → `App.handleReset` clears conversation state + fires optional `onReset` → composer clears host state to the welcome screen; next send opens a fresh `conversation_id` (no new endpoint). Clone-safe (`onReset` optional). **WO-317.4c / PR #54**; owner live-confirmed (fresh `conversation_id` in Render logs). Closed **OBJ-3**. | 317.4 (PR #54) | 317 |
 
 ---
 
@@ -157,4 +165,4 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 _Index maintained by: Sam R. Harkreader_  
-_Last updated: 2026-06-28 (v1.11)_
+_Last updated: 2026-06-28 (v1.12)_
