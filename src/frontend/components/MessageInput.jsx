@@ -21,6 +21,7 @@ import { useState, useEffect, useRef } from 'react';
 
 export default function MessageInput({
   onSend,
+  onNewConversation,
   terminal,
   pending,
   controlsLocked = false,
@@ -68,6 +69,23 @@ export default function MessageInput({
     if (!canSubmit) return;
     onSend(trimmed);
     setContent('');
+  }
+
+  // Terminal, walk complete (controls unlocked): the conversation is over, so
+  // the dead disabled input is replaced by a single "New conversation" button
+  // that restarts the host (WO-317.4c / BL-14). controlsLocked is checked first
+  // so the final turn's walk still shows the advance button — the walk finishes
+  // before the reset is offered. The button is classless, reusing the Send
+  // button's styling (no new token); type="button" so it never submits the
+  // form. onNewConversation is optional-guarded (App always wires handleReset).
+  if (terminal && !controlsLocked) {
+    return (
+      <form onSubmit={handleSubmit} className={formClassName || undefined}>
+        <button type="button" onClick={() => onNewConversation?.()}>
+          New conversation
+        </button>
+      </form>
+    );
   }
 
   const placeholder = terminal

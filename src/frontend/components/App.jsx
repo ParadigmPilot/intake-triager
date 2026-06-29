@@ -32,6 +32,7 @@ export default function App({
   controlsLocked,
   onLockedSend,
   hideLatestAssistant,
+  onReset,
   children,
   formClassName = '',
   inputClassName = '',
@@ -106,6 +107,21 @@ export default function App({
     }
   }
 
+  // New-conversation reset (WO-317.4c / BL-14). Clears App's own conversation
+  // state, then fires the optional onReset so a composer can clear its host
+  // walk state too. onReset is absent on a bare <App /> — the clone still
+  // restarts from its own state alone (clone-safe). The next handleSend sees a
+  // null conversationId and opens a fresh backend conversation.
+  function handleReset() {
+    setConversationId(null);
+    setMessages([]);
+    setTerminal(false);
+    setTerminalReason(null);
+    setError(null);
+    setPending(false);
+    onReset?.();
+  }
+
   // Composition parts (WO-317.2a). App owns conversation state (gold-vision §4);
   // it exposes its render parts so a composer can place them in its own layout
   // zones — banners + transcript in a scroll region, the input in a pinned
@@ -128,6 +144,7 @@ export default function App({
   const footer = (
     <MessageInput
       onSend={handleSend}
+      onNewConversation={handleReset}
       terminal={terminal}
       pending={pending}
       controlsLocked={controlsLocked}

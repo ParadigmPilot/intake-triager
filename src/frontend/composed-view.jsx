@@ -267,6 +267,22 @@ function ComposedView() {
     gate.advance();
   }
 
+  // New conversation (WO-317.4c / BL-14): App fires this after clearing its own
+  // conversation state. Clear all host walk state and return to the welcome
+  // screen (everSubmitted=false re-shows it; archive=[] empties the Event log).
+  // The gate/machine are already idle at terminal — the final turn archived and
+  // the machine self-returned to at_the_table — so only UI state resets here.
+  // The activeTurnKey bump remounts the live Trace clean for the next walk.
+  function onReset() {
+    setArchive([]);
+    setEvents([]);
+    setStarted(false);
+    setEverSubmitted(false);
+    setReplyProse(null);
+    setPendingFirstStep(false);
+    setActiveTurnKey((k) => k + 1);
+  }
+
   return (
     <div className="composed-shell">
       <div className="composed">
@@ -308,6 +324,7 @@ function ComposedView() {
           onTurnFailed={onTurnFailed}
           controlsLocked={started}
           onLockedSend={nextStep}
+          onReset={onReset}
           hideLatestAssistant={started}
           formClassName="control-bar"
           inputClassName="intake-input"
