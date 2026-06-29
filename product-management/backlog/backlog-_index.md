@@ -12,7 +12,7 @@ quality: TBD
 alignment: Partial
 
 # === VERSIONING FIELDS ===
-version: "1.10"
+version: "1.11"
 created: "2026-06-15"
 updated: "2026-06-28"
 owner: Sam R. Harkreader
@@ -26,15 +26,15 @@ depends_on:
 related: []
 
 # === INDEX EXTENSION FIELDS ===
-next_id: 14
-total_count: 13
+next_id: 15
+total_count: 14
 collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 # Intake Triager Backlog
 
-**Total Items:** 13  
-**Next ID:** BL-14  
+**Total Items:** 14  
+**Next ID:** BL-15  
 **Last Updated:** 2026-06-28
 
 > Index created at **session 315.8** from the first live-Render OBJ-1 validation
@@ -74,6 +74,12 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 > ownership-corrected there). **BL-12 stays Captured pending re-confirm.** No new
 > items; counts unchanged (13 / 14).
 
+> **v1.11 (2026-06-28):** session-317.4 — **BL-12 → Complete** (PR #53 / WO-317.4b;
+> owner live-confirmed on wide: footer pinned through a 9-turn walk, transcript
+> scrolls in Zone 2, log scrolls within `.log-dock`). Captured **BL-14** (start a
+> new conversation / exit at the terminal state — no reset path today). Captured
+> 11→11 (−BL-12, +BL-14); Complete 2→3; total 13→14; `next_id` 14→15.
+
 ---
 
 ## Summary by Status
@@ -84,9 +90,9 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | Triaged | 0 |
 | Ready | 0 |
 | Scheduled | 0 |
-| Complete | 2 |
+| Complete | 3 |
 | Rejected | 0 |
-| **Total** | **13** |
+| **Total** | **14** |
 
 ---
 
@@ -103,8 +109,8 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | BL-9 | **Local-build fragility — overlay package pruned by `npm install`.** Overlay installed `--no-save` (pinned `render.yaml` SHA is the single source of truth, keeping `package.json` clean), so any `npm install` prunes it and the local build fails until reinstalled. **Production unaffected.** Fix candidate: a `postinstall`/`predev` hook or documented setup step. Host-owned (build tooling). | Medium | Cycle 317.2 (WO-317.2a build-gate discovery) |
 | BL-10 | **Composed-view CSS-ownership migration.** Host composed-view layout CSS lived in the overlay's `example/example.css` (inverted ownership; Marcus Fontoura flag). GOLD fix: a host stylesheet (`src/frontend/composed-view.css`) owns the layout; the overlay ships only contract-crossing assets + its own demo. Verbatim **split** (the overlay's demo also uses `.composed*`). **(Delivered 317.3 via PR #48; migration to Complete deferred to the validated-backlog pass.)** | High | Cycle 317.3 (Marcus deviation; A-317.3-1) |
 | BL-11 | **`index.html` inline `<style>` reconciliation.** The SPA shell carries a legacy inline `<style>` from the flat-clone era: a global `body` rule that competes with `composed-view.css`'s `body`, plus `.transcript` / `.message*` / flat `form` / `.banner*` rules — active on every render, exposing a second styling location to a cloner (same tangle as BL-10, one layer up). **GOLD:** move page styling into host stylesheet(s); the shell carries no design CSS (or only the bare-clone minimum); reconcile the duplicate `body`. **(C) follow-up** to the 317.3 page-frame fix. Touches the **clone** (P-9 — take care). Host-owned (`index.html` + host CSS). | Medium | Cycle 317.3 (page-frame diagnosis) |
-| BL-12 | **Composed-view scroll discipline.** The middle scroll region (`.composed-scroll`) rests at the **bottom** so the newest message stays in view (chat-app default), **except during the manual walk**, where the **live step block stays in view**. Owner decisions: (1) bottom-pinned internal scroll; (2) header + input pinned only (teaching scrolls with the transcript); (a) live block in view during the walk, rest at bottom on completion. Add a ref to `.composed-scroll`; a `!started`-gated bottom-rest effect; retain the live-block snap. Distinct from BL-15. Host-owned (`composed-view.jsx`). **(Delivered 317.3e via PR #51 — pending live confirm of the during-walk + ≥64rem behavior.)** **317.4:** ≥64rem/during-walk confirm **failed** — wide grid-row gap; fix **WO-317.4b** (host `composed-view.css`), pending re-confirm. | High | Cycle 317.3 (layout design decisions) |
 | BL-13 | **Assistant goes silent — continued turns get no visible reply.** Observed (317.3 live): after a sequence of workplace-conflict turns, the assistant produced **no visible Taylor response** to subsequent user messages ("Well?", "Are you not going to answer me anymore?"); the **input stayed enabled**, so the user kept sending with no feedback or indication. **Not yet diagnosed** — candidates (do not assume): (a) **crisis-end / refusal** path — Taylor's `[RULES]` refuse further turns at the prompt level while `status` stays `active` (known gold-vision §6 design point; input is not disabled), refusal rendering as empty/near-empty; (b) an empty/near-empty model reply; (c) a silently-errored turn (no banner shown); (d) a withheld reply. **Investigation needs:** Render logs for those turns (`converse_turn_received` / `converse_turn_complete` `status` / error events) + a repro. UX concern regardless of cause: a user sending into apparent silence with no feedback. Host-owned (backend `converse` + frontend reply rendering). | Medium | Cycle 317.3 (live eyes-on) |
+| BL-14 | **No way to start a new conversation / exit at the terminal state.** At conversation end the footer shows a disabled **"Conversation ended."** Send and there is no control to **restart the demo** — a re-runnable walk matters for the teaching/host-presentation use. **GOLD:** when the conversation ends, the control-bar slot presents a **"New conversation"** button that resets the demo to its initial welcome state — clears the host arrays (`archive`, `events`) and flags (`started`, `everSubmitted`, `replyProse`); a new conversation is a clean slate (the Event-log archive clears). Host concern only — no overlay surface, no third-party impact (the overlay teaches one turn; the host owns the conversation). **Open design point:** restart the demo (frontend reset) vs a genuinely new backend conversation/session — confirms App's terminal-state + reset surface before the WO. Host-owned (`composed-view.jsx` + App footer/terminal-state). | High | Cycle 317.4 (live eyes-on) |
 
 ---
 
@@ -138,6 +144,7 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 |----|------|-----------|-------|
 | BL-1 | Live "recording" error on real submit. Root cause: `MODEL` pointed at a retired snapshot (`claude-sonnet-4-20250514`) → `404` before any DB write. Fix: `MODEL=claude-sonnet-4-6` + redeploy. Recurred 316.3 (blueprint re-sync); durable fix in `render.yaml` via WO-316.2e. | 315.8 | 315 |
 | BL-2 | Compose the overlay into the deployed intake-triager (host-mount build). 316.3 seam + shell + keyboard-advance; 316.5 cleared the demo door; **316.6 confirmed end-to-end** in a clean incognito session. OBJ-1 core delivered; presentation carved to BL-4/BL-5/BL-7. Owner-ratified Complete. | 316.6 | 316 |
+| BL-12 | **Composed-view scroll discipline + wide-mode footer pin.** Bottom-pinned internal scroll; live block in view during the walk; header + input pinned. Delivered 317.3e (PR #51); the ≥64rem/during-walk facet was the **wide grid-row gap** fixed by **WO-317.4b / PR #53** (host `composed-view.css`: `grid-template-rows: minmax(0,1fr)` + `.composed min-height:0`) — **also resolved overlay BL-14**. Owner live-confirmed wide (9-turn walk, footer pinned, log bounded). | 317.4 (PRs #51/#53) | 317 |
 
 ---
 
@@ -150,4 +157,4 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 _Index maintained by: Sam R. Harkreader_  
-_Last updated: 2026-06-28_
+_Last updated: 2026-06-28 (v1.11)_
