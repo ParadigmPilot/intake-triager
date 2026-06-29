@@ -12,9 +12,9 @@ quality: TBD
 alignment: Partial
 
 # === VERSIONING FIELDS ===
-version: "1.15"
+version: "1.16"
 created: "2026-06-15"
-updated: "2026-06-28"
+updated: "2026-06-29"
 owner: Sam R. Harkreader
 
 # === DESCRIPTION FIELDS ===
@@ -26,16 +26,16 @@ depends_on:
 related: []
 
 # === INDEX EXTENSION FIELDS ===
-next_id: 17
-total_count: 16
+next_id: 18
+total_count: 17
 collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 # Intake Triager Backlog
 
-**Total Items:** 16  
-**Next ID:** BL-17  
-**Last Updated:** 2026-06-28
+**Total Items:** 17  
+**Next ID:** BL-18  
+**Last Updated:** 2026-06-29
 
 > Index created at **session 315.8** from the first live-Render OBJ-1 validation
 > pass. Item names are recorded as **rows**; individual item files are not
@@ -104,19 +104,26 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 > owner live-confirmed: prominent amber demo-limit callout in the in-view footer at
 > the 10-turn limit). Captured 12→11; Complete 4→5; total/`next_id` unchanged (16 / 17).
 
+> **v1.16 (2026-06-29):** session-317.5 — captured **BL-17** (overlay teaching copy:
+> third-party decoupling + plain-language rewrite), from the two-turn live QC. Canon
+> read confirmed `ManualOverlay.jsx` is a **pure renderer** — the copy fix is
+> **manifest content, not component code**; the P-9 triage gates on where the manifests
+> live (overlay package vs host substrate adapter). Captured 11→12; total 16→17;
+> `next_id` 17→18.
+
 ---
 
 ## Summary by Status
 
 | Status | Count |
 |--------|-------|
-| Captured | 11 |
+| Captured | 12 |
 | Triaged | 0 |
 | Ready | 0 |
 | Scheduled | 0 |
 | Complete | 5 |
 | Rejected | 0 |
-| **Total** | **16** |
+| **Total** | **17** |
 
 ---
 
@@ -129,12 +136,13 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | BL-5 | Step-01 control **relabel + input hide** during the walk. While `controlsLocked`, hide the input and present a **"Next Step"** button in the Send slot; advance wiring unchanged. **(Delivered 317.3a via PR #47; migration to Complete deferred to the validated-backlog pass.)** | High | Cycle 316.4/316.6 (live eyes-on) |
 | BL-6 | Turn-2 `/converse` error — **could-not-reproduce (watch)**. Suspected session-state (circuit-breaker / cost ceiling), not code. No fix without reproduction + a Render log line. *(cycle-317 baseline closes this Rejected/no-repro; migrates to Rejected at the validated-backlog pass.)* | Low | Cycle 316.6 (transient) |
 | BL-7 | Event-log **cumulative within a conversation**, **grouped by turn** (in-memory). Shared `events` array is wiped per turn (`setEvents([])`), so the log is empty at conversation-complete. **Re-scoped 317.3 (A-317.3-1):** split into a **live list** (current turn; wiped) and an **archive list** (completed turns; never wiped); render the archive as **collapsible turn groups** (markers folded to one row; `plate_the_dish` keeps latency) + the in-progress turn. Composes with BL-8. Host logic + markup (`composed-view.jsx`) + log CSS (host `composed-view.css`). Host-owned. **Last OBJ-3 item.** | Medium | Cycle 316.6 (live; owner decision — persistent) |
-| BL-8 | **Payload-surfacing** — show each step's real **per-turn** content beneath its fixed teaching line. **Paired, lesson-primary, payload-subordinate** — never replace the teaching message. The **credibility-wedge** feature; §6's payload-bearing-replay intent re-aimed from replay to surfacing. Est. ~½–1 cycle; OBJ-2. Security: never leak system prompt / intake PII; cheap market probe recommended before the full build. Cross-cutting. | Medium | Cycle 316.6 (replay→payload reframe) |
+| BL-8 | **Payload-surfacing** — show each step's real **per-turn** content beneath its fixed teaching line. **Paired, lesson-primary, payload-subordinate** — never replace the teaching message. The **credibility-wedge** feature; §6's payload-bearing-replay intent re-aimed from replay to surfacing. Est. ~½–1 cycle; OBJ-2. **Part 1 delivered 317.5 (WO-317.5a / PR #57):** `detailLevel` seam + `take_the_order` input beat + `read_the_ticket` records (marker **type-only**, no PII on the wire); host `TurnPayload` beneath `ManualOverlay`. Part 2 (317.6): `plate_the_dish` model/latency/tokens + `stock_the_pantry` side-effects + redaction sign-off. Security: never leak system prompt / intake PII; cheap market probe recommended before the full build. Cross-cutting. | Medium | Cycle 316.6 (replay→payload reframe) |
 | BL-9 | **Local-build fragility — overlay package pruned by `npm install`.** Overlay installed `--no-save` (pinned `render.yaml` SHA is the single source of truth, keeping `package.json` clean), so any `npm install` prunes it and the local build fails until reinstalled. **Production unaffected.** Fix candidate: a `postinstall`/`predev` hook or documented setup step. Host-owned (build tooling). | Medium | Cycle 317.2 (WO-317.2a build-gate discovery) |
 | BL-10 | **Composed-view CSS-ownership migration.** Host composed-view layout CSS lived in the overlay's `example/example.css` (inverted ownership; Marcus Fontoura flag). GOLD fix: a host stylesheet (`src/frontend/composed-view.css`) owns the layout; the overlay ships only contract-crossing assets + its own demo. Verbatim **split** (the overlay's demo also uses `.composed*`). **(Delivered 317.3 via PR #48; migration to Complete deferred to the validated-backlog pass.)** | High | Cycle 317.3 (Marcus deviation; A-317.3-1) |
 | BL-11 | **`index.html` inline `<style>` reconciliation.** The SPA shell carries a legacy inline `<style>` from the flat-clone era: a global `body` rule that competes with `composed-view.css`'s `body`, plus `.transcript` / `.message*` / flat `form` / `.banner*` rules — active on every render, exposing a second styling location to a cloner (same tangle as BL-10, one layer up). **GOLD:** move page styling into host stylesheet(s); the shell carries no design CSS (or only the bare-clone minimum); reconcile the duplicate `body`. **(C) follow-up** to the 317.3 page-frame fix. Touches the **clone** (P-9 — take care). Host-owned (`index.html` + host CSS). | Medium | Cycle 317.3 (page-frame diagnosis) |
 | BL-13 | **Assistant goes silent — continued turns get no visible reply.** Observed (317.3 live): after a sequence of workplace-conflict turns, the assistant produced **no visible Taylor response** to subsequent user messages ("Well?", "Are you not going to answer me anymore?"); the **input stayed enabled**, so the user kept sending with no feedback or indication. **Not yet diagnosed** — candidates (do not assume): (a) **crisis-end / refusal** path — Taylor's `[RULES]` refuse further turns at the prompt level while `status` stays `active` (known gold-vision §6 design point; input is not disabled), refusal rendering as empty/near-empty; (b) an empty/near-empty model reply; (c) a silently-errored turn (no banner shown); (d) a withheld reply. **Investigation needs:** Render logs for those turns (`converse_turn_received` / `converse_turn_complete` `status` / error events) + a repro. UX concern regardless of cause: a user sending into apparent silence with no feedback. Host-owned (backend `converse` + frontend reply rendering). | Medium | Cycle 317.3 (live eyes-on) |
-| BL-15 | **Demo turn-budget exhaustion surfaces as an opaque 401 mid-conversation.** During a live walk a `POST /converse` returned **401 Unauthorized** and never reached the converse handler (no `converse_turn_received`). **Diagnosed 317.4:** root cause is the **per-session turn budget** (default **10**, `verify.js` `DEFAULT_TURN_BUDGET` / `DEMO_TURN_BUDGET`) — 7 turns (conv `3e7b6891`) + 3 turns (conv `2ada27ac`) = 10 used; the **11th** turn 401'd. **TTL ruled out** (session 01:08 → expires 02:08; failure ~01:42). **BL-14 interaction:** "New conversation" starts a new *conversation* but reuses the same *demo session*, so the budget **carries across the reset** — the user hits the cap mid-conversation thinking they started fresh. The 401 is `session-middleware.js` (likely the `DEMO_SESSION_TERMINAL` branch, set by cost-protection on budget exhaustion). **UX defect:** `App.jsx` maps any non-OK to `GENERIC_ERROR` ("…please try again") — wrong for a budget cap; retry won't help and it hides that this is a *demo limit*. **Fix direction (product + auth):** (a) map the specific 401 code to an honest "demo limit reached — start a new session" message + disable input; (b) product call on whether a reset mints a fresh budget — **note: resetting the budget defeats the cost cap (infinite resets = infinite spend).** **Confirm path with** `cost-protection-middleware.js` + the 401 `error.code`. Distinct from BL-13. Host-owned (backend auth/cost + frontend error mapping). | Medium | Cycle 317.4 (live walk + Network 401) |
+| BL-15 | **Demo turn-budget exhaustion surfaces as an opaque 401 mid-conversation.** During a live walk a `POST /converse` returned **401 Unauthorized** and never reached the converse handler (no `converse_turn_received`). **Diagnosed 317.4:** root cause is the **per-session turn budget** (default **10**, `verify.js` `DEFAULT_TURN_BUDGET` / `DEMO_TURN_BUDGET`) — 7 turns (conv `3e7b6891`) + 3 turns (conv `2ada27ac`) = 10 used; the **11th** turn 401'd. **TTL ruled out** (session 01:08 → expires 02:08; failure ~01:42). **BL-14 interaction:** "New conversation" starts a new *conversation* but reuses the same *demo session*, so the budget **carries across the reset** — the user hits the cap mid-conversation thinking they started fresh. The 401 is `session-middleware.js` (likely the `DEMO_SESSION_TERMINAL` branch, set by cost-protection on budget exhaustion). **Frontend half delivered 317.4 (WO-317.4d / PR #55):** `App.jsx` maps the budget codes to an honest demo-limit terminal state + input disable. **Backend/product half deferred to Cycle 318:** whether a reset mints a fresh budget — **note: resetting the budget defeats the cost cap (infinite resets = infinite spend).** Host-owned (backend auth/cost + frontend error mapping). | Medium | Cycle 317.4 (live walk + Network 401) |
+| BL-17 | **Overlay teaching copy — third-party decoupling + plain-language rewrite (learner clarity).** Two-turn live QC (317.5) found the ManualOverlay teaching copy (a) names this app's internals — "POST **/converse**", "**HTML-comment markers**" — so dropping the overlay on another host renders false claims, defeating the drop-in-credibility-wedge premise; and (b) stacks the restaurant metaphor and code jargon in one breath ("the Runner carries your order through the hand-off window to the Pass"), forcing the learner to decode two languages at once. **Canon finding:** `ManualOverlay.jsx` is a **pure renderer** — every teaching string (`restaurant_label`, `technology_label`, `plain_english`, `in_code`, `just_finished`, `up_next`) comes from `substrate.loadManifest(stepId)`; the only hardcoded text is "Step", "IN CODE:", and the step-id list. So the copy fix is **manifest content, not component code**. **P-9 gate (triage blocker):** do the per-step manifests live in the overlay package or the host substrate adapter? If overlay → this is an overlay change (own repo, own backlog mirror) and the manifests must become **host-supplied** (the app provides its own `in_code`/labels; the overlay ships domain-neutral defaults only). **Facets:** (1) decouple app-specific strings → host-supplied manifest content [overlay/host boundary — needs manifest-source location]; (2) plain-language pass — one plain sentence per step, readable without the metaphor or code terms [manifest content]; (3) neutral box label — "records filed" → host-neutral (e.g. "What this step produced") [host `TurnPayload` + manifest]; (4) input beat reframed from verbatim echo to the **transformation** ("your message became the request sent to the server") — kills the double-print (payload block + chat bubble), worst on long inputs [host `composed-view.jsx` / BL-8]; (5) clamp long input/payload height on narrow (~384px) + scroll [host `composed-view.css`]. **Related (open, not in this item):** demo-routing so a real `TRIAGE_RECORD` fires and the records box populates at least once [separate — demo/seed; owner decision pending]; ARIA step-change announcement [already OBJ-4 / overlay ARIA]; Network type-only confirm on a completing turn [QC step, not a BL]. Host + overlay; **splits into host-copy and overlay-manifest WOs at triage** pending the manifest-source finding. | Medium | Cycle 317.5 (two-turn live QC) |
 
 ---
 
@@ -183,4 +191,4 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 _Index maintained by: Sam R. Harkreader_  
-_Last updated: 2026-06-28 (v1.15)_
+_Last updated: 2026-06-29 (v1.16)_
