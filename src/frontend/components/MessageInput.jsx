@@ -22,6 +22,7 @@ import { useState, useEffect, useRef } from 'react';
 export default function MessageInput({
   onSend,
   onNewConversation,
+  limitReached = false,
   terminal,
   pending,
   controlsLocked = false,
@@ -69,6 +70,25 @@ export default function MessageInput({
     if (!canSubmit) return;
     onSend(trimmed);
     setContent('');
+  }
+
+  // Demo session spent (WO-317.4d / BL-15): the per-session turn budget is
+  // exhausted, so retrying is futile and the BL-14 "New conversation" button
+  // (which reuses the same spent session) would be a dead end. Show a disabled
+  // input and a link to start a fresh session on the demo page instead. Highest
+  // precedence — a spent budget is terminal regardless of walk/terminal state.
+  if (limitReached) {
+    return (
+      <form onSubmit={handleSubmit} className={formClassName || undefined}>
+        <input
+          type="text"
+          className={inputClassName || undefined}
+          placeholder="Demo limit reached."
+          disabled
+        />
+        <a href="https://restaurantpattern.com/demo">Start a new session</a>
+      </form>
+    );
   }
 
   // Terminal, walk complete (controls unlocked): the conversation is over, so
