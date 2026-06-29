@@ -8,7 +8,7 @@
 // idle-connection timeout in the network path ("Premature close"). Resolves to
 // the same complete Message → unchanged {text, usage}. Reads MODEL from env
 // (default claude-sonnet-4-20250514).
-// Takes the array from assemblePrompt; returns {text, usage}.
+// Takes the array from assemblePrompt; returns {text, usage, model}.
 //
 // Briefing array shape: [{role: 'system', content}, {role, content}, ...]
 // SDK call shape: messages.create({model, max_tokens, system, messages})
@@ -87,7 +87,11 @@ export async function cook(briefing) {
     input_tokens: response.usage.input_tokens,
     output_tokens: response.usage.output_tokens,
   };
-  return { text, usage };
+  // Per WO-317.6a (BL-8 part 2): surface the env-resolved MODEL alongside
+  // text+usage so converse can carry the plate_the_dish receipt (model + token
+  // counts) to the composition overlay. Additive only — existing {text, usage}
+  // destructures are unaffected.
+  return { text, usage, model: MODEL };
 }
 
 export default { cook };

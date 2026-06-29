@@ -128,13 +128,14 @@ function TurnGroup({ index, events, live = false }) {
 // Promotable to a prop/config later without touching the call sites.
 const DETAIL_LEVEL = 'standard';
 
-// Per-turn payload block (BL-8, part 1). Sits BENEATH a Service step's constant
-// teaching line (ManualOverlay) — paired, lesson-primary, payload-subordinate
-// (D-RPR-4); it never replaces the lesson. 'standard' surfaces take_the_order's
-// input (the order as placed, labeled as this step's input) and
-// read_the_ticket's filed records (marker TYPE only — payload bytes never leave
-// the server, §10). plate_the_dish / stock_the_pantry artifacts land in 317.6.
-function TurnPayload({ stepId, orderText, artifacts }) {
+// Per-turn payload block (BL-8). Sits BENEATH a Service step's constant teaching
+// line (ManualOverlay) — paired, lesson-primary, payload-subordinate (D-RPR-4);
+// it never replaces the lesson. 'standard' surfaces, per step: take_the_order's
+// input (the order as placed), plate_the_dish's model call (model + latency +
+// tokens), read_the_ticket's detected marker types, and stock_the_pantry's filed
+// records. Marker payload bytes never leave the server (TYPE only, §10); the
+// plate receipt is metadata only (model id + token counts, no values).
+function TurnPayload({ stepId, orderText, artifacts, latency }) {
   if (DETAIL_LEVEL !== 'standard') return null; // 'full' renderer reserved
 
   if (stepId === 'take_the_order' && orderText) {
@@ -146,7 +147,65 @@ function TurnPayload({ stepId, orderText, artifacts }) {
     );
   }
 
+  if (stepId === 'plate_the_dish') {
+    const model = artifacts?.model ?? null;
+    const usage = artifacts?.usage ?? null;
+    return (
+      <div className="turn-payload">
+        <span className="turn-payload__label">This turn — the model call</span>
+        <ul className="turn-payload__list">
+          {model && (
+            <li className="turn-payload__item">
+              model <code>{model}</code>
+            </li>
+          )}
+          {latency != null && (
+            <li className="turn-payload__item">
+              latency <code>{latency} ms</code>
+            </li>
+          )}
+          {usage && (
+            <li className="turn-payload__item">
+              tokens{' '}
+              <code>
+                {usage.input_tokens} in · {usage.output_tokens} out
+              </code>
+            </li>
+          )}
+        </ul>
+      </div>
+    );
+  }
+
+  // read_the_ticket (step 04) READS the ticket — the marker types the expediter
+  // parsed from the chef's output. Filing happens later at stock_the_pantry
+  // (step 06); this block names detection, not filing (BL-8 part-1 mislabel fix).
   if (stepId === 'read_the_ticket') {
+    const markers = artifacts?.markers ?? [];
+    return (
+      <div className="turn-payload">
+        <span className="turn-payload__label">This turn — ticket read</span>
+        {markers.length === 0 ? (
+          <p className="turn-payload__body turn-payload__body--muted">
+            Nothing flagged on this ticket.
+          </p>
+        ) : (
+          <ul className="turn-payload__list">
+            {markers.map((marker, i) => (
+              <li key={i} className="turn-payload__item">
+                <code>{marker.type}</code>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
+  // stock_the_pantry (step 06) FILES the records — the side-effect that actually
+  // persists (dispatch). Same marker types as read_the_ticket, now framed as
+  // filed (BL-8 part 2: the "records filed" beat moves here, where it is true).
+  if (stepId === 'stock_the_pantry') {
     const markers = artifacts?.markers ?? [];
     return (
       <div className="turn-payload">
@@ -229,6 +288,14 @@ function ComposedView() {
   // block to the step currently being walked (BL-8).
   const currentStep =
     [...events].reverse().find((e) => e.type === 'step_started')?.stepId ?? null;
+
+  // plate_the_dish latency for the live turn (BL-8 part 2) — folded from the
+  // released events (same source as the Event log). Null until plate has both
+  // started and ended; the plate payload block fills it reactively when the
+  // back half releases plate_ended.
+  const plateLatency =
+    foldTurnEvents(events).find((r) => r.stepId === 'plate_the_dish')?.latency ??
+    null;
 
   const completedCount = events.filter((e) => e.type === 'step_ended').length;
   const turnComplete = started && completedCount >= SERVICE_STEP_COUNT;
@@ -439,6 +506,7 @@ function ComposedView() {
                       stepId={currentStep}
                       orderText={orderText}
                       artifacts={artifacts}
+                      latency={plateLatency}
                     />
                     {atServe && replyProse && (
                       <div className="msg msg-assistant">{replyProse}</div>

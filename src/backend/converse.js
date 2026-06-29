@@ -110,8 +110,9 @@ export default async function converse(req, res) {
     // (short open window per WO-310.9c §D.1).
     let text;
     let usage;
+    let model;
     try {
-      ({ text, usage } = await cook(briefing));
+      ({ text, usage, model } = await cook(briefing));
       recordSuccess();
     } catch (err) {
       recordFailure(classifyError(err));
@@ -162,12 +163,15 @@ export default async function converse(req, res) {
       conversation_id,
       reply: { role: ASSISTANT_ROLE, content: prose },
       status: finalStatus,
-      // Per-turn artifacts for the composition overlay (BL-8). TYPE ONLY —
-      // the marker payload is intake content (TRIAGE_RECORD = the record
-      // itself) and never leaves the server (§10). Additive field; the bare
-      // clone ignores it.
+      // Per-turn artifacts for the composition overlay (BL-8). Metadata ONLY:
+      // marker TYPE (never the TRIAGE_RECORD payload — that is intake content
+      // and never leaves the server, §10), the plate_the_dish model id, and the
+      // token usage counts. No system prompt, no intake values cross the wire —
+      // redaction by exclusion. Additive field; the bare clone ignores it.
       artifacts: {
         markers: markers.map((m) => ({ type: m.type })),
+        model,
+        usage,
       },
       demoSession: {
         turnsUsed: sessionAfter.turns_used,
