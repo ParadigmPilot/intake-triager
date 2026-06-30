@@ -141,7 +141,10 @@ function TurnPayload({ stepId, orderText, artifacts, latency }) {
   if (stepId === 'take_the_order' && orderText) {
     return (
       <div className="turn-payload">
-        <span className="turn-payload__label">This turn — input</span>
+        <span className="turn-payload__label">What this step just did</span>
+        <p className="turn-payload__body turn-payload__body--muted">
+          Your message, now the order the Runner carries:
+        </p>
         <p className="turn-payload__body">{orderText}</p>
       </div>
     );
@@ -152,7 +155,7 @@ function TurnPayload({ stepId, orderText, artifacts, latency }) {
     const usage = artifacts?.usage ?? null;
     return (
       <div className="turn-payload">
-        <span className="turn-payload__label">This turn — the model call</span>
+        <span className="turn-payload__label">What this step just did</span>
         <ul className="turn-payload__list">
           {model && (
             <li className="turn-payload__item">
@@ -184,7 +187,7 @@ function TurnPayload({ stepId, orderText, artifacts, latency }) {
     const markers = artifacts?.markers ?? [];
     return (
       <div className="turn-payload">
-        <span className="turn-payload__label">This turn — ticket read</span>
+        <span className="turn-payload__label">What this step just did</span>
         {markers.length === 0 ? (
           <p className="turn-payload__body turn-payload__body--muted">
             No record on this ticket yet — the Chef writes one only once the
@@ -210,7 +213,7 @@ function TurnPayload({ stepId, orderText, artifacts, latency }) {
     const markers = artifacts?.markers ?? [];
     return (
       <div className="turn-payload">
-        <span className="turn-payload__label">This turn — records filed</span>
+        <span className="turn-payload__label">What this step just did</span>
         {markers.length === 0 ? (
           <p className="turn-payload__body turn-payload__body--muted">
             Nothing to file yet — a record is filed only once the intake is
