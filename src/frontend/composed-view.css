@@ -497,6 +497,24 @@ h1 {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
+/* Long-value safety: a long input or model/token value wraps rather than
+   forcing horizontal overflow. Safe at all widths. */
+.turn-payload__body,
+.turn-payload__item code {
+  overflow-wrap: anywhere;
+}
+
+/* Narrow-viewport clamp (BL-17): on small screens cap the payload block height
+   and let it scroll internally, so a long input or value never pushes the lesson
+   above it off-screen — lesson stays primary (D-RPR-4). The rem is a media-query
+   literal, not a design token (Robin Malfait Rule — tokens.css untouched). */
+@media (max-width: 30rem) {
+  .turn-payload {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+}
+
 /* Anchored control footer (WO-315.5d): direct child of the .composed flex
    column, pinned below the scroll region so the snap-to-top never drags it. */
 .control-bar {
