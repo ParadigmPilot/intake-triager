@@ -12,7 +12,7 @@ quality: TBD
 alignment: Partial
 
 # === VERSIONING FIELDS ===
-version: "1.18"
+version: "1.19"
 created: "2026-06-15"
 updated: "2026-06-29"
 owner: Sam R. Harkreader
@@ -26,15 +26,15 @@ depends_on:
 related: []
 
 # === INDEX EXTENSION FIELDS ===
-next_id: 19
-total_count: 18
+next_id: 20
+total_count: 19
 collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 # Intake Triager Backlog
 
-**Total Items:** 18  
-**Next ID:** BL-19  
+**Total Items:** 19  
+**Next ID:** BL-20  
 **Last Updated:** 2026-06-29
 
 > Index created at **session 315.8** from the first live-Render OBJ-1 validation
@@ -131,19 +131,25 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 > never witnesses the payoff). BL-8 stays Captured pending the validated-backlog
 > pass. Captured 12→13; total 17→18; `next_id` 18→19.
 
+> **v1.19 (2026-06-29):** session-317.8 — captured **BL-19** (learner-facing
+> "turn" → "round" rename; **§5.1 dual-frame** — display copy only, code
+> identifiers unchanged), per baseline amendment **A-317.8-1** (off-baseline fix
+> added to 317.8 alongside the delivered BL-17). Host-only (`composed-view.jsx`);
+> zero new tokens; P-9 clean. Captured 13→14; total 18→19; `next_id` 19→20.
+
 ---
 
 ## Summary by Status
 
 | Status | Count |
 |--------|-------|
-| Captured | 13 |
+| Captured | 14 |
 | Triaged | 0 |
 | Ready | 0 |
 | Scheduled | 0 |
 | Complete | 5 |
 | Rejected | 0 |
-| **Total** | **18** |
+| **Total** | **19** |
 
 ---
 
@@ -164,6 +170,7 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 | BL-15 | **Demo turn-budget exhaustion surfaces as an opaque 401 mid-conversation.** During a live walk a `POST /converse` returned **401 Unauthorized** and never reached the converse handler (no `converse_turn_received`). **Diagnosed 317.4:** root cause is the **per-session turn budget** (default **10**, `verify.js` `DEFAULT_TURN_BUDGET` / `DEMO_TURN_BUDGET`) — 7 turns (conv `3e7b6891`) + 3 turns (conv `2ada27ac`) = 10 used; the **11th** turn 401'd. **TTL ruled out** (session 01:08 → expires 02:08; failure ~01:42). **BL-14 interaction:** "New conversation" starts a new *conversation* but reuses the same *demo session*, so the budget **carries across the reset** — the user hits the cap mid-conversation thinking they started fresh. The 401 is `session-middleware.js` (likely the `DEMO_SESSION_TERMINAL` branch, set by cost-protection on budget exhaustion). **Frontend half delivered 317.4 (WO-317.4d / PR #55):** `App.jsx` maps the budget codes to an honest demo-limit terminal state + input disable. **Backend/product half deferred to Cycle 318:** whether a reset mints a fresh budget — **note: resetting the budget defeats the cost cap (infinite resets = infinite spend).** Host-owned (backend auth/cost + frontend error mapping). | Medium | Cycle 317.4 (live walk + Network 401) |
 | BL-17 | **Overlay teaching copy — plain-language rewrite + host TurnPayload UX (learner clarity).** **[host-only]** Two-turn live QC (317.5) found the teaching copy is jargon-dense — restaurant metaphor + code terms stacked in one breath ("the Runner carries your order through the hand-off window to the Pass") — forcing the learner to decode two languages at once. **P-9 RESOLVED (host-only):** the per-step manifests live in the **host** at `src/substrate/manifests/index.js` (not the overlay); `ManualOverlay.jsx` is a pure renderer. The overlay is therefore **already decoupled by design** — "/converse" / "HTML-comment markers" are this app's own accurate strings, host-supplied. The original "third-party coupling" worry reduces to a **clone-template doc note** (a cloner inherits this app's manifest specifics and must rewrite them — README, not code). **Facets (all host):** (1) plain-language pass in `manifests/index.js` — one plain sentence per step, readable without the metaphor or code terms [host manifest content]; (2) neutral payload label — "records filed" → host-neutral (e.g. "what this step produced") [host `composed-view.jsx` TurnPayload]; (3) input beat reframed from verbatim echo to the **transformation** ("your message became the request sent to the server") — kills the double-print (payload block + chat bubble), worst on long inputs [host `composed-view.jsx` / BL-8]; (4) clamp long input/payload height on narrow (~384px) + scroll [host `composed-view.css`]. **Cross-ref:** the **step-4 mislabel** found here is owned by **BL-8** (part-1 defect) and corrected in **317.6**. **Demo-routing item DROPPED** — the box must show the true per-turn state; no steering. Host-only; splits into a manifest-copy WO + a TurnPayload-UX WO at triage. | Medium | Cycle 317.5 (two-turn live QC) |
 | BL-18 | **Demo never shows a *filed* record on a short first walk — the credibility payoff stays hidden.** Per `system.md` [MARKER PROTOCOL], Taylor (the Chef) emits a `TRIAGE_RECORD` **only once the intake is complete** (the e2e scripts `standard-intake` / `mandatory-escalation` both take **seven** user turns to reach it); **no single-turn input fires a record**. So a newcomer in a short bounded session walks the six steps and sees only the **empty** payload states at `read_the_ticket` (step 4) and `stock_the_pantry` (step 6) — never a record **detected** then **filed**. The BL-8 surfacing is **correct** (absence shown honestly; empty-state copy clarified by WO-317.6c), but the newcomer never witnesses the wedge: a real record at steps 4 & 6. **GOLD candidate:** pre-load a **near-complete canonical conversation** (the temperature-0 `standard-intake` script) so the user's **first** walk fires the record — detected at step 4, filed at step 6 — within the demo budget. **Needs scoping:** backend seed vs. guided client script vs. demo-budget interaction (a 7-turn intake vs. the 10-turn cap); honest framing (a seeded conversation must read as a worked example, not a fake). WO-317.6c empty-state copy is the **interim mitigation**, not this. Host-owned (frontend demo seed; possibly backend). | Medium | Cycle 317.6 (live QC — all-empty demo) |
+| BL-19 | **Learner-facing "turn" → "round" rename (plain-language).** In two-person turn-taking each party takes a *turn*; the full exchange is a *round*. The demo's learner copy calls the whole user↔assistant exchange (the six Service steps) a "turn" — imprecise for the COMS (non-LLM-engineer) audience. **Rename the unit noun "turn" → "round" in learner-facing display strings only:** welcome body ("that's one turn" / "walk the turn one step at a time"), Event-log group header ("Turn N"), Event-log empty-state ("once a turn runs"), step-six signal ("saving this turn"). **Code identifiers stay "turn"** (`TurnPayload`, `createTurnDriver`, `onTurnSubmitted`, `.turn-group*`) per **§5.1 dual-frame** — developers see the code mnemonic, learners see the UI word. Verb uses ("turns your message into an answer") unchanged. App.jsx demo-budget "turns" is a different concept (per-message cap) and stays. Host-only (`src/frontend/composed-view.jsx`); zero new tokens; no overlay touch (P-9). **(Fix rides 317.8 via WO-317.8c per A-317.8-1.)** | Low | Cycle 317.8 (owner live-QC; turn-taking terminology) |
 
 ---
 
@@ -212,4 +219,4 @@ collection_type: backlog   # lowercase per ai-practice Anti-Pattern 6
 ---
 
 _Index maintained by: Sam R. Harkreader_  
-_Last updated: 2026-06-29 (v1.18)_
+_Last updated: 2026-06-29 (v1.19)_
