@@ -105,7 +105,7 @@ function TurnGroup({ index, events, live = false }) {
       open={live || undefined}
     >
       <summary className="turn-group__header">
-        Turn {index + 1}
+        Round {index + 1}
         {live && <span className="turn-group__live-tag">in progress</span>}
       </summary>
       <div className="turn-group__body">
@@ -498,9 +498,9 @@ function ComposedView() {
                   Pattern is a way to see that work as six Service steps — the way
                   a kitchen turns an order into a finished plate. Normally you only
                   see the two ends: your message in, the answer out. That’s one{' '}
-                  <em>turn</em>, and the six steps inside it stay hidden. This
+                  <em>round</em>, and the six steps inside it stay hidden. This
                   overlay opens them up — describe an intake below, then walk the
-                  turn one step at a time and study each one.
+                  round one step at a time and study each one.
                 </p>
               </div>
             )}
@@ -534,7 +534,7 @@ function ComposedView() {
                     )}
                     {atPantry && (
                       <p className="step-six-signal">
-                        Behind the scenes — saving this turn to your recent
+                        Behind the scenes — saving this round to your recent
                         history.
                       </p>
                     )}
@@ -575,7 +575,7 @@ function ComposedView() {
           <div id="event-log">
             {archive.length === 0 && events.length === 0 ? (
               <div className="event-row">
-                <em>Events will appear here once a turn runs.</em>
+                <em>Events will appear here once a round runs.</em>
               </div>
             ) : (
               <>
