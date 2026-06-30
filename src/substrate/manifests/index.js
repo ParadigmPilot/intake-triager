@@ -46,7 +46,7 @@ export const manifests = Object.freeze({
     technology_label: 'Send the request',
     animation_asset: null,
     plain_english:
-      'The Runner carries your order through the hand-off window to the Pass. Behind the scenes, your typed message becomes an HTTP request traveling to the backend.',
+      'The Runner carries your order through the hand-off window to the Pass.',
     in_code: 'POST /converse over HTTPS to the Pass',
     just_finished: '← Just finished: Contemplating order',
     up_next:
@@ -58,7 +58,7 @@ export const manifests = Object.freeze({
     technology_label: 'Assemble the prompt',
     animation_asset: null,
     plain_english:
-      "The Expediter loads the conversation's history from the Pantry, assembles the briefing, and hands it to the Chef. The backend reads prior messages from the database, builds the full prompt context, and sends it to the LLM provider's API.",
+      "The Expediter loads the conversation's history from the Pantry, assembles the briefing, and hands it to the Chef.",
     in_code:
       'Load history; assemble system + history + user; POST to LLM messages endpoint',
     just_finished: '← Just finished: Take the order',
@@ -71,7 +71,7 @@ export const manifests = Object.freeze({
     technology_label: 'Run inference',
     animation_asset: null,
     plain_english:
-      "Complying with the Kitchen's rules and limits, the Chef composes one plated dish carrying everything the order needs. The LLM runs inference within token caps and behavior rules set in the system prompt, then returns a single response containing both the visible reply and the embedded markers.",
+      "Complying with the Kitchen's rules and limits, the Chef composes one plated dish carrying everything the order needs.",
     in_code:
       'LLM inference (token-capped; rule-bound by system prompt); response returns assistant message + HTML-comment markers',
     just_finished: '← Just finished: Brief the Chef',
@@ -84,7 +84,7 @@ export const manifests = Object.freeze({
     technology_label: 'Extract the markers',
     animation_asset: null,
     plain_english:
-      "The Expediter reads the ticket the Chef sent out, sorting what to serve to your table from what the Kitchen needs to act on. The backend regex-matches the HTML-comment markers, parses each ticket's JSON payload, and strips the markers from the display text.",
+      "The Expediter reads the ticket the Chef sent out, sorting what to serve to your table from what the Kitchen needs to act on.",
     in_code:
       'Regex-scan response; JSON.parse each marker payload; strip markers from display text',
     just_finished: '← Just finished: Plate the dish',
@@ -97,7 +97,7 @@ export const manifests = Object.freeze({
     technology_label: 'Render the response',
     animation_asset: null,
     plain_english:
-      'The Runner carries the plated prose from the Pass to your table — served fast, before any paperwork is filed. The backend returns the cleaned response over HTTPS and the browser renders it in your chat thread.',
+      'The Runner carries the plated prose from the Pass to your table — served fast, before any paperwork is filed.',
     in_code:
       'HTTP 200 response to client; front end renders assistant message to DOM',
     just_finished: '← Just finished: Read the ticket',
@@ -110,7 +110,7 @@ export const manifests = Object.freeze({
     technology_label: 'Persist the conversation',
     animation_asset: null,
     plain_english:
-      'Out of your view, the Kitchen logs the completed order into the Pantry and acts on each ticket — adding to the history that will brief the Chef on the next order, and fulfilling every action this order produced. The backend writes the user and assistant messages to the database, then dispatches each ticket to its handler.',
+      'Out of your view, the Kitchen logs the completed order into the Pantry and acts on each ticket — adding to the history that will brief the Chef on the next order, and fulfilling every action this order produced.',
     in_code:
       'INSERT user message; INSERT assistant message; dispatch each ticket to its handler',
     just_finished: '← Just finished: Serve the Patron',
