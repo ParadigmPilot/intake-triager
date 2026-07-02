@@ -349,6 +349,21 @@ h1 {
   line-height: var(--line-height-snug);
 }
 
+/* Methodology doorway (WO-318.2a): one link from the idle welcome surface out to
+   the methodology site — the single source of truth for the Cast/Set/Script
+   mapping. Sits below the welcome body, matching its type scale; the anchor
+   carries the amber accent. Existing tokens only (Robin Malfait Rule). */
+.composed-welcome-link {
+  margin: var(--space-3) 0 0;
+  color: var(--color-stone);
+  font-size: var(--font-size-sm);
+}
+
+.composed-welcome-link a {
+  color: var(--color-amber-deep);
+  font-weight: var(--font-weight-semibold);
+}
+
 .chat {
   display: flex;
   flex-direction: column;

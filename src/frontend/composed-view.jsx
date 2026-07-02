@@ -502,6 +502,12 @@ function ComposedView() {
                   overlay opens them up — describe an intake below, then walk the
                   round one step at a time and study each one.
                 </p>
+                <p className="composed-welcome-link">
+                  New to the Restaurant Pattern?{' '}
+                  <a href="https://restaurant-pattern-site.onrender.com/methodology">
+                    See the full method →
+                  </a>
+                </p>
               </div>
             )}
 
